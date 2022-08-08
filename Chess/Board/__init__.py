@@ -1,5 +1,5 @@
 def chess_board(FEN_string):
-    """Makes the FEN string given a list of 8 lists with each a length of 8, representing the chessboard when printed out"""
+    """Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
     FEN_list = FEN_string.split(" ")
     position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]
     position_listx = 0
@@ -22,8 +22,10 @@ def chess_board(FEN_string):
                 print(position_list[y][x], end="   ")
             print("\n")
         print("\n")
+    return position_list
         
         
 
 
-chess_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+if __name__=="__main__":
+    chess_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
