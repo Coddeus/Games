@@ -12,7 +12,7 @@ def draw_board(FEN_string):
     
     running = True
     #let user customize below info in settings
-    window = d.display.set_mode((920, 890))
+    window = d.display.set_mode((920, 890), d.SCALED)
     icon = d.image.load("Assets\Icons\WindowIcon.png")
     white = d.Color(255,255,255)
     light = d.Color(172, 115, 57)
