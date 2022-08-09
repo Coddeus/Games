@@ -1,6 +1,5 @@
 from Board import chess_board
 import pygame as d
-import os
 
 def count_combinations(n):
     """Counts the number of possible move combinations from the beginning of the game after n total moves"""
@@ -12,10 +11,12 @@ def draw_board(FEN_string):
     list = chess_board(FEN_string)
     
     running = True
-    window = d.display.set_mode((800, 800))
-    icon = d.image.load("Chess\Assets\Icons\WindowIcon.png")
+    #let user customize below info in settings
+    window = d.display.set_mode((920, 890))
+    icon = d.image.load("Assets\Icons\WindowIcon.png")
     white = d.Color(255,255,255)
-    black = d.Color(0,0,0)
+    light = d.Color(172, 115, 57)
+    dark = d.Color(102, 51, 0)
     d.init()
     window.fill(white)
     d.display.set_icon(icon)
@@ -23,7 +24,9 @@ def draw_board(FEN_string):
     for y in range(8):
         for x in range(8):
             if (x+y)%2==1:
-                d.draw.rect(window, black, (x*100, y*100, 100, 100))
+                d.draw.rect(window, dark, (x*100+60, y*100+30, 100, 100))
+            else:
+                d.draw.rect(window, light, (x*100+60, y*100+30, 100, 100))
     d.display.update()
 
     while running:
