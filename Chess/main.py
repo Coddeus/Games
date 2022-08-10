@@ -75,9 +75,9 @@ def init(FEN_string):
  
 			elif event.type == d.MOUSEBUTTONUP:
 				if moving:
-					draw_board(list)
 					endsquarey=floor(d.mouse.get_pos()[1]/100)
 					endsquarex=floor(d.mouse.get_pos()[0]/100)
+					draw_board(list, squarex, squarey)
 					end_coordinates = (100*endsquarex+globals()[list[squarey][squarex]+"xy"][0],100*endsquarey+globals()[list[squarey][squarex]+"xy"][1])
 					window.blit(globals()[piece], end_coordinates)
 				moving = False
