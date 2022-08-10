@@ -51,7 +51,6 @@ def draw_board(FEN_string):
     moving = False
     while running:
         for event in d.event.get():
-            print(event)
             if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE) or (event.type == d.QUIT): 
                 running = False
             elif event.type == d.MOUSEBUTTONDOWN:
@@ -72,7 +71,7 @@ def draw_board(FEN_string):
                                 pass
                             else:
                                 window.blit(locals()[list[y][x]], (100*x+locals()[list[y][x]+"xy"][0],100*y+locals()[list[y][x]+"xy"][0]))
-                    coordinates = (d.mouse.get_pos()[0]+locals()[piece+"xy"][0]-50, d.mouse.get_pos()[1]-32)
+                    coordinates = (d.mouse.get_pos()[0]-((100-2*locals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*locals()[piece+"xy"][1])/2-2))
                     window.blit(locals()[piece], coordinates)  
             elif event.type == d.MOUSEBUTTONUP:
                 moving = False
@@ -89,7 +88,7 @@ def draw_board(FEN_string):
                             pass
                         else:
                             window.blit(locals()[list[y][x]], (100*x+locals()[list[y][x]+"xy"][0],100*y+locals()[list[y][x]+"xy"][0]))
-                coordinates = (d.mouse.get_pos()[0]+locals()[piece+"xy"][0]-50, d.mouse.get_pos()[1]-32)
+                coordinates = (d.mouse.get_pos()[0]-((100-2*locals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*locals()[piece+"xy"][1])//2-2))
                 window.blit(locals()[piece], coordinates)  
             d.display.update()
     d.quit()
