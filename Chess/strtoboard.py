@@ -15,17 +15,4 @@ def chess_board(FEN_string):
         else:
             position_list[position_listy][position_listx] = x
             position_listx+=1
-    if __name__=="__main__":
-        print("\n")
-        for y in range(8):
-            for x in range(8):
-                print(position_list[y][x], end="   ")
-            print("\n")
-        print("\n")
     return position_list
-        
-        
-
-
-if __name__=="__main__":
-    chess_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
