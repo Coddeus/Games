@@ -2,8 +2,23 @@ import pygame as d
 from os import path
 from math import floor
 
+# Global variables declaring
+window = d.display.set_mode((800, 800), d.SCALED)
+icon = d.image.load("Assets\Icons\WindowIcon.png")
+white = d.Color(255,255,255)
+light = d.Color(172, 115, 57)
+dark = d.Color(102, 51, 0)
+for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
+	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
+pxy = Pxy = (23,18)
+nxy = Nxy = (21,18)
+bxy = Bxy = (18,18)
+rxy = Rxy = (20,18)
+qxy = Qxy = (15,18)
+kxy = Kxy = (18,18)
+
 def list_to_str(chess_board):
-	"""Turns the list of lists (the chessboard position) given into a FEN string"""
+	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
 	pass
 
 def str_to_list(FEN_string):
@@ -58,11 +73,11 @@ def init(FEN_string):
 	moving = False
 	while running:
 		for event in d.event.get():
-
+			print(event)
 			if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE) or (event.type == d.QUIT): 
 				running = False
 
-			elif event.type == d.MOUSEBUTTONDOWN:
+			elif event.type == d.MOUSEBUTTONDOWN and d.mouse.get_pressed()[0]==True:
 				squarey=floor(d.mouse.get_pos()[1]/100)
 				squarex=floor(d.mouse.get_pos()[0]/100)
 				if list[squarey][squarex]!=0:
@@ -76,7 +91,8 @@ def init(FEN_string):
 				draw_board(list)
 				blit_on_cursor(piece)
  
-			elif event.type == d.MOUSEBUTTONUP:
+			elif event.type == d.MOUSEBUTTONUP and d.mouse.get_pressed()[0]==False:
+				print(d.mouse.get_pressed())
 				if moving:
 					endsquarey=floor(d.mouse.get_pos()[1]/100)
 					endsquarex=floor(d.mouse.get_pos()[0]/100)
@@ -84,7 +100,6 @@ def init(FEN_string):
 					draw_board(list)
 					end_coordinates = (100*endsquarex+globals()[piece+"xy"][0],100*endsquarey+globals()[piece+"xy"][1])
 					window.blit(globals()[piece], end_coordinates)
-					
 				moving = False
 			
 			d.display.update()
@@ -97,21 +112,6 @@ def count_combinations(n):
 def count_positions(n):
 	"""Counts the number of possible board positions after n moves"""
 	pass
-
-# Global variables declaring
-window = d.display.set_mode((800, 800), d.SCALED)
-icon = d.image.load("Assets\Icons\WindowIcon.png")
-white = d.Color(255,255,255)
-light = d.Color(172, 115, 57)
-dark = d.Color(102, 51, 0)
-for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
-	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
-pxy = Pxy = (23,18)
-nxy = Nxy = (21,18)
-bxy = Bxy = (18,18)
-rxy = Rxy = (20,18)
-qxy = Qxy = (15,18)
-kxy = Kxy = (18,18)
 
 # Start with chess start position
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
