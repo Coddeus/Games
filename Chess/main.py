@@ -25,7 +25,7 @@ def str_to_list(FEN_string):
 			position_listx+=1
 	return position_list
 
-def draw_board(list, squarex=9, squarey=9):
+def draw_board(list):
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -34,10 +34,14 @@ def draw_board(list, squarex=9, squarey=9):
 				d.draw.rect(window, light, (x*100, y*100, 100, 100))
 	for y in range(8):
 		for x in range(8):
-			if list[y][x]==0 or (y==squarey and x==squarex):
+			if list[y][x]==0:
 				pass
 			else:
 				window.blit(globals()[list[y][x]], (100*x+globals()[list[y][x]+"xy"][0],100*y+globals()[list[y][x]+"xy"][1]))
+
+def blit_on_cursor(piece):
+	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
+	window.blit(globals()[piece], coordinates)
 
 def init(FEN_string):
 	list = str_to_list(FEN_string)
@@ -63,23 +67,24 @@ def init(FEN_string):
 				squarex=floor(d.mouse.get_pos()[0]/100)
 				if list[squarey][squarex]!=0:
 					piece = list[squarey][squarex]
+					list[squarey][squarex] = 0
+					draw_board(list)
+					blit_on_cursor(piece)
 					moving = True
-					draw_board(list, squarex, squarey)
-					coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])/2-2))
-					window.blit(globals()[piece], coordinates)
 
 			elif event.type == d.MOUSEMOTION and moving:
-				draw_board(list, squarex, squarey)
-				coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
-				window.blit(globals()[piece], coordinates)   
+				draw_board(list)
+				blit_on_cursor(piece)
  
 			elif event.type == d.MOUSEBUTTONUP:
 				if moving:
 					endsquarey=floor(d.mouse.get_pos()[1]/100)
 					endsquarex=floor(d.mouse.get_pos()[0]/100)
-					draw_board(list, squarex, squarey)
-					end_coordinates = (100*endsquarex+globals()[list[squarey][squarex]+"xy"][0],100*endsquarey+globals()[list[squarey][squarex]+"xy"][1])
+					list[endsquarey][endsquarex] = piece
+					draw_board(list)
+					end_coordinates = (100*endsquarex+globals()[piece+"xy"][0],100*endsquarey+globals()[piece+"xy"][1])
 					window.blit(globals()[piece], end_coordinates)
+					
 				moving = False
 			
 			d.display.update()
@@ -109,4 +114,5 @@ qxy = Qxy = (15,18)
 kxy = Kxy = (18,18)
 
 # Start with chess start position
-init("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+init(start_position)
