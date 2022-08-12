@@ -24,7 +24,7 @@ def list_to_str(chess_board):
 def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
-	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]
+	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,0,0,1]]
 	position_listx = 0
 	position_listy = 0
 	numbers = ["1","2","3","4","5","6","7","8"]
@@ -59,7 +59,8 @@ def blit_on_cursor(piece):
 	window.blit(globals()[piece], coordinates)
 
 def init(FEN_string):
-	list = str_to_list(FEN_string)
+	if "/" in FEN_string:
+		list = str_to_list(FEN_string)
 
 	# Init
 	d.init()
@@ -68,16 +69,17 @@ def init(FEN_string):
 	d.display.set_caption('Chess')
 	draw_board(list)
 	d.display.update()
+	buttons = d.mouse.get_pressed(5)
 
 	running = True
-	moving = False
+	dragged = False
 	while running:
 		for event in d.event.get():
-			print(event)
+
 			if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE) or (event.type == d.QUIT): 
 				running = False
 
-			elif event.type == d.MOUSEBUTTONDOWN and d.mouse.get_pressed()[0]==True:
+			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 				squarey=floor(d.mouse.get_pos()[1]/100)
 				squarex=floor(d.mouse.get_pos()[0]/100)
 				if list[squarey][squarex]!=0:
@@ -85,23 +87,22 @@ def init(FEN_string):
 					list[squarey][squarex] = 0
 					draw_board(list)
 					blit_on_cursor(piece)
-					moving = True
-
-			elif event.type == d.MOUSEMOTION and moving:
+					dragged = True
+			
+			elif event.type == d.MOUSEMOTION and dragged:
 				draw_board(list)
 				blit_on_cursor(piece)
  
-			elif event.type == d.MOUSEBUTTONUP and d.mouse.get_pressed()[0]==False:
-				print(d.mouse.get_pressed())
-				if moving:
-					endsquarey=floor(d.mouse.get_pos()[1]/100)
-					endsquarex=floor(d.mouse.get_pos()[0]/100)
-					list[endsquarey][endsquarex] = piece
-					draw_board(list)
-					end_coordinates = (100*endsquarex+globals()[piece+"xy"][0],100*endsquarey+globals()[piece+"xy"][1])
-					window.blit(globals()[piece], end_coordinates)
-				moving = False
-			
+			elif d.mouse.get_pressed(5)[0]==False and dragged:
+				endsquarey=floor(d.mouse.get_pos()[1]/100)
+				endsquarex=floor(d.mouse.get_pos()[0]/100)
+				list[endsquarey][endsquarex] = piece
+				draw_board(list)
+				end_coordinates = (100*endsquarex+globals()[piece+"xy"][0],100*endsquarey+globals()[piece+"xy"][1])
+				window.blit(globals()[piece], end_coordinates)
+				dragged = False
+
+			buttons = d.mouse.get_pressed(5)
 			d.display.update()
 	d.quit()
 
