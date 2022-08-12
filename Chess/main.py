@@ -10,6 +10,11 @@ light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
+white_pieces = ["P","N","B","R","Q","K"]
+black_pieces = ["p","n","b","r","q","k"]
+whitetoplay = True
+blacktoplay = False
+possible_pieces = [white_pieces, black_pieces]
 pxy = Pxy = (23,18)
 nxy = Nxy = (21,18)
 bxy = Bxy = (18,18)
@@ -82,7 +87,7 @@ def init(FEN_string):
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 				squarey=floor(d.mouse.get_pos()[1]/100)
 				squarex=floor(d.mouse.get_pos()[0]/100)
-				if list[squarey][squarex]!=0:
+				if list[squarey][squarex] in possible_pieces[list[8][0]%2]:
 					piece = list[squarey][squarex]
 					list[squarey][squarex] = 0
 					draw_board(list)
@@ -100,6 +105,7 @@ def init(FEN_string):
 				draw_board(list)
 				end_coordinates = (100*endsquarex+globals()[piece+"xy"][0],100*endsquarey+globals()[piece+"xy"][1])
 				window.blit(globals()[piece], end_coordinates)
+				list[8][0]+=1
 				dragged = False
 
 			buttons = d.mouse.get_pressed(5)
