@@ -1,6 +1,7 @@
 import pygame as d
 from os import path
 from math import floor
+# TODO make a start menu
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
 # Global variables declaringlist
@@ -15,7 +16,7 @@ darkblue = d.Color(40, 40, 100)
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
 all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
-startsquarex = 0 # TODO color the start/end squares of the letest move
+startsquarex = 0 # TODO color the start/end squares of the latest move
 startsquarey = 0
 testsquarex = 0
 testsquarey = 0
@@ -183,7 +184,7 @@ def init(FEN_string):
 
 	running = True
 	dragged = False
-	while running: # TODO add chess rules
+	while running: # TODO end chess rules
 		for event in d.event.get(): #TODO review ifs order, makes it user-friendly with several clicks at a time (customizable)
 
 			squarey=floor(d.mouse.get_pos()[1]/100)
@@ -217,7 +218,7 @@ def init(FEN_string):
 				draw_board(list)
 				dragged = False
 			
-			elif d.mouse.get_pressed(5)[2]==True: #TODO add other colors with right click and alt / ctrl 
+			elif d.mouse.get_pressed(5)[2]==True: #TODO add other colors with right click and alt / ctrl    // custom color
 				if (squarex+squarey)%2==1: #TODO add mode with mousebuttondown to color only one square / choose to draw multipleSquares or draw arrow
 					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100)) # TODO uncolor when pressed again
 				else:
