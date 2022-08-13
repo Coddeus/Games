@@ -32,7 +32,7 @@ def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
 	pass
 
-def str_to_list(FEN_string): # TODO str -> list
+def str_to_list(FEN_string): # TODO str -> list : background colors ?
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
 	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,[0,0],0,1]]
@@ -70,9 +70,9 @@ def blit_on_cursor(piece):
 	window.blit(globals()[piece], coordinates)
 
 def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possible_squares at the end of the ifs
-	possible_squares = []
+	possible_squares = [] # TODO show possible squares when piece is clicked //custom
 
-	if piece == "P": # TODO en-passant
+	if piece == "P":
 		if list[squarey-1][squarex]==0:
 			possible_squares.append([squarey-1,squarex])
 			if squarey == 6:
