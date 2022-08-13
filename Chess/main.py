@@ -84,6 +84,8 @@ def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possib
 		if squarex<=6:
 			if list[squarey-1][squarex+1] in all_pieces[1]:
 				possible_squares.append([squarey-1,squarex+1])
+		if list[8][3][0] ==squarey and (list[8][3][1] ==squarex-1 or list[8][3][1] ==squarex+1):
+			possible_squares.append([list[8][3][0]-1, list[8][3][1]])
 	elif piece == "p":
 		if list[squarey+1][squarex]==0:
 			possible_squares.append([squarey+1,squarex])
@@ -96,6 +98,8 @@ def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possib
 		if squarex<=6:
 			if list[squarey+1][squarex+1] in all_pieces[0]:
 				possible_squares.append([squarey+1,squarex+1])
+		if list[8][3][0] ==squarey and (list[8][3][1] ==squarex-1 or list[8][3][1] ==squarex+1):
+			possible_squares.append([list[8][3][0]+1, list[8][3][1]])
 
 	elif piece == "N" or piece == "n":
 		conditions = ["squarex>=1 and squarey>=2", "squarex>=2 and squarey>=1", "squarex>=2 and squarey<=6", "squarex>=1 and squarey<=5", "squarex<=6 and squarey<=5", "squarex<=5 and squarey<=6", "squarex<=5 and squarey>=1", "squarex<=6 and squarey>=2"]
@@ -160,7 +164,7 @@ def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possib
 			if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex] not in all_pieces[list[8][0]%2]:
 				possible_squares.append([testsquarey, testsquarex])
 
-	return(possible_squares)
+	return possible_squares
 
 def aftermove(list): # Handles Check and promotion 
 	if "P" in list[0]: # TODO handle Check, mate, stalemate, endgame draws and all promotions
@@ -210,9 +214,15 @@ def init(FEN_string):
  
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
 				if [squarey, squarex] in possibilities:
+					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
+						list[list[8][3][0]][list[8][3][1]] = 0
 					list[squarey][squarex] = piece
 					aftermove(list)
 					list[8][0]+=1
+					if (piece == "P" or piece == "p") and (squarey == startsquarey-2 or squarey == startsquarey+2):
+						list[8][3] = [squarey, squarex]
+					else:
+						list[8][3] = [-1, -1]
 				else:
 					list[startsquarey][startsquarex] = piece
 				draw_board(list)
