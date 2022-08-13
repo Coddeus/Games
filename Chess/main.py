@@ -238,7 +238,7 @@ def init(FEN_string):
 
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
-			clock.tick(222)
+		clock.tick(222)
 	d.quit()
 
 def count_combinations(n):
