@@ -3,7 +3,7 @@ from os import path
 from math import floor
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
-# Global variables declaring
+# Global variables declaringlist
 clock = d.time.Clock()
 window = d.display.set_mode((800, 800), d.SCALED)
 icon = d.image.load("Assets\Icons\WindowIcon.png")
@@ -14,9 +14,13 @@ lightblue = d.Color(100, 100, 255)
 darkblue = d.Color(40, 40, 100)
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
-possible_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
+all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
 startsquarex = 0 # TODO color the start/end squares of the letest move
 startsquarey = 0
+testsquarex = 0
+testsquarey = 0
+possible_squares = []
+list = []
 pxy = Pxy = (23,18)
 nxy = Nxy = (21,18)
 bxy = Bxy = kxy = Kxy = (18,18)
@@ -30,7 +34,7 @@ def list_to_str(chess_board):
 def str_to_list(FEN_string): # TODO str -> list
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
-	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,0,0,1]]
+	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,[0,0],0,1]]
 	position_listx = 0
 	position_listy = 0
 	numbers = ["1","2","3","4","5","6","7","8"]
@@ -64,6 +68,105 @@ def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
 	window.blit(globals()[piece], coordinates)
 
+def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possible_squares at the end of the ifs
+	possible_squares = []
+
+	if piece == "P": # TODO en-passant
+		if list[squarey-1][squarex]==0:
+			possible_squares.append([squarey-1,squarex])
+			if squarey == 6:
+				if list[4][squarex]==0:
+					possible_squares.append([4,squarex])
+		if squarex>=1:
+			if list[squarey-1][squarex-1] in all_pieces[1]:
+				possible_squares.append([squarey-1,squarex-1])
+		if squarex<=6:
+			if list[squarey-1][squarex+1] in all_pieces[1]:
+				possible_squares.append([squarey-1,squarex+1])
+	elif piece == "p":
+		if list[squarey+1][squarex]==0:
+			possible_squares.append([squarey+1,squarex])
+			if squarey == 1:
+				if list[3][squarex]==0:
+					possible_squares.append([3,squarex])
+		if squarex>=1:
+			if list[squarey+1][squarex-1] in all_pieces[0]:
+				possible_squares.append([squarey+1,squarex-1])
+		if squarex<=6:
+			if list[squarey+1][squarex+1] in all_pieces[0]:
+				possible_squares.append([squarey+1,squarex+1])
+
+	elif piece == "N" or piece == "n":
+		conditions = ["squarex>=1 and squarey>=2", "squarex>=2 and squarey>=1", "squarex>=2 and squarey<=6", "squarex>=1 and squarey<=5", "squarex<=6 and squarey<=5", "squarex<=5 and squarey<=6", "squarex<=5 and squarey>=1", "squarex<=6 and squarey>=2"]
+		verify_squares = [[squarey-2, squarex-1], [squarey-1, squarex-2], [squarey+1, squarex-2], [squarey+2, squarex-1], [squarey+2, squarex+1], [squarey+1, squarex+2], [squarey-1, squarex+2], [squarey-2, squarex+1]]
+		for i in range(8):
+			if eval(conditions[i]):
+				if list[verify_squares[i][0]][verify_squares[i][1]] not in all_pieces[list[8][0]%2]:
+					possible_squares.append([verify_squares[i][0], verify_squares[i][1]])
+	
+	elif piece == "B" or piece == "b":
+		squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1"]
+		squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1"]
+		for i, j in zip(squareyop, squarexop):
+			testsquarex, testsquarey = squarex, squarey
+			keepon = True
+			while keepon:
+				testsquarey, testsquarex = eval(i), eval(j)
+				if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex] not in all_pieces[list[8][0]%2]:
+					possible_squares.append([testsquarey, testsquarex])
+					if list[testsquarey][testsquarex] in all_pieces[(list[8][0]+1)%2]:
+						keepon = False
+				else:
+					keepon = False
+	
+	elif piece == "R" or piece == "r":
+		squareyop = ["testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
+		squarexop = ["testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
+		for i, j in zip(squareyop, squarexop):
+			testsquarex, testsquarey = squarex, squarey
+			keepon = True
+			while keepon:
+				testsquarey, testsquarex = eval(i), eval(j)
+				if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex] not in all_pieces[list[8][0]%2]:
+					possible_squares.append([testsquarey, testsquarex])
+					if list[testsquarey][testsquarex] in all_pieces[(list[8][0]+1)%2]:
+						keepon = False
+				else:
+					keepon = False
+			else:
+				keepon = False
+
+	elif piece == "Q" or piece == "q":
+		squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
+		squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1", "testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
+		for i, j in zip(squareyop, squarexop):
+			testsquarex, testsquarey = squarex, squarey
+			keepon = True
+			while keepon:
+				testsquarey, testsquarex = eval(i), eval(j)
+				if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex] not in all_pieces[list[8][0]%2]:
+					possible_squares.append([testsquarey, testsquarex])
+					if list[testsquarey][testsquarex] in all_pieces[(list[8][0]+1)%2]:
+						keepon = False
+				else:
+					keepon = False
+	
+	elif piece == "K" or piece == "k":
+		squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
+		squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
+		for i, j in zip(squareyop, squarexop):
+			testsquarey, testsquarex = eval(i), eval(j)
+			if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex] not in all_pieces[list[8][0]%2]:
+				possible_squares.append([testsquarey, testsquarex])
+
+	return(possible_squares)
+
+def aftermove(list): # Handles Check and promotion 
+	if "P" in list[0]: # TODO handle Check, mate, stalemate, endgame draws and all promotions
+		list[0][list[0].index("P")]="Q"
+	elif "p" in list[7]:
+		list[7][list[7].index("p")]="q"
+
 def init(FEN_string):
 	"""Initializes with a FEN string or a custom format list from this file""" # TODO other formats to read ?
 	if "/" in FEN_string:
@@ -91,8 +194,10 @@ def init(FEN_string):
 			
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 				draw_board(list)
-				if list[squarey][squarex] in possible_pieces[list[8][0]%2]:
+				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
+					startsquarey, startsquarex = squarey, squarex
 					piece = list[squarey][squarex]
+					possibilities = possible_squares(list,piece,squarey,squarex)
 					list[squarey][squarex] = 0
 					draw_board(list)
 					blit_on_cursor(piece)
@@ -103,26 +208,26 @@ def init(FEN_string):
 				blit_on_cursor(piece)
  
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
-				list[squarey][squarex] = piece
+				if [squarey, squarex] in possibilities:
+					list[squarey][squarex] = piece
+					aftermove(list)
+					list[8][0]+=1
+				else:
+					list[startsquarey][startsquarex] = piece
 				draw_board(list)
-				end_coordinates = (100*squarex+globals()[piece+"xy"][0],100*squarey+globals()[piece+"xy"][1])
-				window.blit(globals()[piece], end_coordinates)
-				list[8][0]+=1
 				dragged = False
 			
 			elif d.mouse.get_pressed(5)[2]==True: #TODO add other colors with right click and alt / ctrl 
 				if (squarex+squarey)%2==1: #TODO add mode with mousebuttondown to color only one square / choose to draw multipleSquares or draw arrow
-					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
+					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100)) # TODO uncolor when pressed again
 				else:
 					d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
 				if list[squarey][squarex]!=0:
 					window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
 
-			
-
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
-			clock.tick(100)
+			clock.tick(222)
 	d.quit()
 
 def count_combinations(n):
