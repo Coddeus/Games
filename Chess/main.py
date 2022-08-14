@@ -268,7 +268,7 @@ def init(FEN_string):
 			
 			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
 				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
-					if (squarex+squarey)%2==1: 
+					if (squarex+squarey)%2==1: # TODO Premoves
 						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
 					else:
 						d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
@@ -297,4 +297,4 @@ def count_positions(n):
 
 # Start with chess start position
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-init(start_position)
+init(start_position) # TODO online multiplayer / play vs engine / engine evaluator
