@@ -1,4 +1,6 @@
+from cgitb import grey
 import pygame as d
+import pygame.gfxdraw as gfxd
 from os import path
 from math import floor
 # TODO make a start menu
@@ -6,13 +8,14 @@ from math import floor
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
 # Global variables declaringlist
 clock = d.time.Clock()
-window = d.display.set_mode((800, 800), d.SCALED)
+window = d.display.set_mode((800, 800), d.SCALED, d.SRCALPHA)
 icon = d.image.load("Assets\Icons\WindowIcon.png")
 white = d.Color(255,255,255)
 light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what else ?)
 dark = d.Color(102, 51, 0)
 lightblue = d.Color(100, 100, 255)
 darkblue = d.Color(40, 40, 100)
+bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
 all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
@@ -51,7 +54,7 @@ def str_to_list(FEN_string): # TODO str -> list : background colors ?
 			position_listx+=1
 	return position_list
 
-def draw_board(list):
+def draw_board(list, possibilities=[]):
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -64,13 +67,15 @@ def draw_board(list):
 				pass
 			else:
 				window.blit(globals()[list[y][x]], (100*x+globals()[list[y][x]+"xy"][0],100*y+globals()[list[y][x]+"xy"][1]))
+	for p in possibilities:
+		gfxd.filled_circle(window, 100*p[1]+48,100*p[0]+48, 15, (150,150,150,200))
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
 	window.blit(globals()[piece], coordinates)
 
 def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possible_squares at the end of the ifs
-	possible_squares = [] # TODO show possible squares when piece is clicked //custom
+	possible_squares = [] # TODO use choice to show possible squares when piece is clicked or not
 
 	if piece == "P":
 		if list[squarey-1][squarex]==0:
@@ -156,7 +161,7 @@ def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possib
 				else:
 					keepon = False
 	
-	elif piece == "K" or piece == "k":
+	elif piece == "K" or piece == "k": # TODO castles
 		squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
 		squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
 		for i, j in zip(squareyop, squarexop):
@@ -186,6 +191,8 @@ def init(FEN_string):
 	d.display.update()
 	buttons = d.mouse.get_pressed(5)
 
+	possibilities = []
+	possibilitieson = False
 	running = True
 	dragged = False
 	while running: # TODO end chess rules
@@ -198,22 +205,43 @@ def init(FEN_string):
 				running = False
 			
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
-				draw_board(list)
+				if possibilitieson and [squarey, squarex] in possibilities:
+					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
+						list[list[8][3][0]][list[8][3][1]] = 0
+					list[startsquarey][startsquarex] = 0
+					list[squarey][squarex] = piece
+					aftermove(list)
+					list[8][0]+=1
+					if (piece == "P" or piece == "p") and (squarey == startsquarey-2 or squarey == startsquarey+2):
+						list[8][3] = [squarey, squarex]
+					else:
+						list[8][3] = [-1, -1]
+				
+				possibilities = []
+				possibilitieson = False
+				draw_board(list, possibilities)
+				dragged = False
+				globals()["bglist"][squarey][squarex]=0
+
 				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
 					startsquarey, startsquarex = squarey, squarex
 					piece = list[squarey][squarex]
 					possibilities = possible_squares(list,piece,squarey,squarex)
+					possibilitieson = True
 					list[squarey][squarex] = 0
-					draw_board(list)
+					draw_board(list, possibilities)
 					blit_on_cursor(piece)
 					dragged = True
 			
 			elif event.type == d.MOUSEMOTION and dragged:
-				draw_board(list)
+				draw_board(list, possibilities)
 				blit_on_cursor(piece)
+				globals()["bglist"][squarey][squarex]=0
  
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
 				if [squarey, squarex] in possibilities:
+					possibilities = []
+					possibilitieson = False
 					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
 						list[list[8][3][0]][list[8][3][1]] = 0
 					list[squarey][squarex] = piece
@@ -225,14 +253,22 @@ def init(FEN_string):
 						list[8][3] = [-1, -1]
 				else:
 					list[startsquarey][startsquarex] = piece
-				draw_board(list)
+				draw_board(list, possibilities)
 				dragged = False
 			
-			elif d.mouse.get_pressed(5)[2]==True: #TODO add other colors with right click and alt / ctrl    // custom color
-				if (squarex+squarey)%2==1: #TODO add mode with mousebuttondown to color only one square / choose to draw multipleSquares or draw arrow
-					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100)) # TODO uncolor when pressed again
-				else:
-					d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
+			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
+				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
+					if (squarex+squarey)%2==1: 
+						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
+					else:
+						d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
+					globals()["bglist"][squarey][squarex]=1
+				elif globals()["bglist"][squarey][squarex]==1:
+					if (squarex+squarey)%2==1:
+						d.draw.rect(window, dark, (squarex*100, squarey*100, 100, 100))
+					else:
+						d.draw.rect(window, light, (squarex*100, squarey*100, 100, 100))
+					globals()["bglist"][squarey][squarex]=0
 				if list[squarey][squarex]!=0:
 					window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
 
