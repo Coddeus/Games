@@ -15,6 +15,8 @@ light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what
 dark = d.Color(102, 51, 0)
 lightblue = d.Color(100, 100, 255)
 darkblue = d.Color(40, 40, 100)
+lightorange = d.Color(172, 86, 57)
+darkorange = d.Color(102, 31, 0)
 bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
@@ -35,10 +37,10 @@ def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
 	pass
 
-def str_to_list(FEN_string): # TODO str -> list : background colors ?
+def str_to_list(FEN_string): # TODO str -> list
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
-	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,[0,0],0,1]]
+	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,[0,0],0,1], [[0,0],[0,0]]]
 	position_listx = 0
 	position_listy = 0
 	numbers = ["1","2","3","4","5","6","7","8"]
@@ -54,13 +56,19 @@ def str_to_list(FEN_string): # TODO str -> list : background colors ?
 			position_listx+=1
 	return position_list
 
-def draw_board(list, possibilities=[]):
+def draw_board(list, possibilities=[], possibilitieson = False):
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
 				d.draw.rect(window, dark, (x*100, y*100, 100, 100))
 			else:
 				d.draw.rect(window, light, (x*100, y*100, 100, 100))
+	if list[8][0]>=1:
+		for c in list[9]:
+			if (c[0]+c[1])%2==1:
+				d.draw.rect(window, darkorange, (c[1]*100, c[0]*100, 100, 100))
+			else:
+				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100))
 	for y in range(8):
 		for x in range(8):
 			if list[y][x]==0:
@@ -68,14 +76,14 @@ def draw_board(list, possibilities=[]):
 			else:
 				window.blit(globals()[list[y][x]], (100*x+globals()[list[y][x]+"xy"][0],100*y+globals()[list[y][x]+"xy"][1]))
 	for p in possibilities:
-		gfxd.filled_circle(window, 100*p[1]+48,100*p[0]+48, 15, (150,150,150,200))
+		gfxd.filled_circle(window, 100*p[1]+48,100*p[0]+48, 15, (50,50,50,100))
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
 	window.blit(globals()[piece], coordinates)
 
 def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possible_squares at the end of the ifs
-	possible_squares = [] # TODO use choice to show possible squares when piece is clicked or not
+	possible_squares = [] # TODO user choice to show possible squares when piece is clicked or not
 
 	if piece == "P":
 		if list[squarey-1][squarex]==0:
@@ -212,6 +220,7 @@ def init(FEN_string):
 					list[squarey][squarex] = piece
 					aftermove(list)
 					list[8][0]+=1
+					list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
 					if (piece == "P" or piece == "p") and (squarey == startsquarey-2 or squarey == startsquarey+2):
 						list[8][3] = [squarey, squarex]
 					else:
@@ -219,7 +228,7 @@ def init(FEN_string):
 				
 				possibilities = []
 				possibilitieson = False
-				draw_board(list, possibilities)
+				draw_board(list, possibilities, possibilitieson)
 				dragged = False
 				globals()["bglist"][squarey][squarex]=0
 
@@ -234,7 +243,7 @@ def init(FEN_string):
 					dragged = True
 			
 			elif event.type == d.MOUSEMOTION and dragged:
-				draw_board(list, possibilities)
+				draw_board(list, possibilities, True)
 				blit_on_cursor(piece)
 				globals()["bglist"][squarey][squarex]=0
  
@@ -246,6 +255,7 @@ def init(FEN_string):
 						list[list[8][3][0]][list[8][3][1]] = 0
 					list[squarey][squarex] = piece
 					aftermove(list)
+					list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
 					list[8][0]+=1
 					if (piece == "P" or piece == "p") and (squarey == startsquarey-2 or squarey == startsquarey+2):
 						list[8][3] = [squarey, squarex]
@@ -274,7 +284,7 @@ def init(FEN_string):
 
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
-		clock.tick(222)
+		clock.tick(60)
 	d.quit()
 
 def count_combinations(n):
