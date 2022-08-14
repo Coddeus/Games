@@ -32,15 +32,16 @@ nxy = Nxy = (21,18)
 bxy = Bxy = kxy = Kxy = (18,18)
 rxy = Rxy = (20,18)
 qxy = Qxy = (15,18)
+start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
 	pass
 
-def str_to_list(FEN_string): # TODO str -> list
+def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
-	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,1,1,[0,0],0,1], [[0,0],[0,0]]]
+	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,[0,0],[0,0],[0,0],0,1], [[0,0],[0,0]]]
 	position_listx = 0
 	position_listy = 0
 	numbers = ["1","2","3","4","5","6","7","8"]
@@ -54,6 +55,18 @@ def str_to_list(FEN_string): # TODO str -> list
 		else:
 			position_list[position_listy][position_listx] = x
 			position_listx+=1
+	if FEN_list[1] == "w":
+		position_list[8][0] = 0
+	elif FEN_list[1] == "b":
+		position_list[8][0] = 1
+	if "K" in FEN_list[2]:
+		position_list[8][1][0]=1
+	if "Q" in FEN_list[2]:
+		position_list[8][1][1]=1
+	if "k" in FEN_list[2]:
+		position_list[8][2][0]=1
+	if "q" in FEN_list[2]:
+		position_list[8][2][1]=1
 	return position_list
 
 def draw_board(list, possibilities=[], possibilitieson = False):
@@ -296,5 +309,4 @@ def count_positions(n):
 	pass
 
 # Start with chess start position
-start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 init(start_position) # TODO online multiplayer / play vs engine / engine evaluator
