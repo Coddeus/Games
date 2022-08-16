@@ -8,7 +8,7 @@ from math import floor
 # TODO timed games
 # Global variables declaringlist
 clock = d.time.Clock()
-window = d.display.set_mode((800, 800), d.SCALED, d.SRCALPHA)
+window = d.display.set_mode((800, 800), d.SRCALPHA, d.SCALED)
 icon = d.image.load("Assets\Icons\WindowIcon.png")
 white = d.Color(255,255,255)
 light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what else ?)
@@ -67,7 +67,7 @@ def str_to_list(FEN_string):
 		position_list[8][2][1]=1
 	return position_list
 
-def draw_board(list, possibilities=[], possibilitieson = False):
+def draw_board(list, possibilities=[]):
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -230,8 +230,13 @@ def ischeck(list, squarey, squarex, squaredefender):
 	if ischeck == False:
 
 		if squaredefender==0:
-			if list[squarey-1][squarex-1]=="p" or list[squarey-1][squarex+1]=="p":
-				ischeck = True
+			if squarey>=1:
+				if squarex>=1:
+					if list[squarey-1][squarex-1]=="p":
+						ischeck = True
+				if squarex<=6:
+					if list[squarey-1][squarex+1]=="p":
+						ischeck = True
 			if ischeck == False:
 				ways=0
 				squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
@@ -264,8 +269,13 @@ def ischeck(list, squarey, squarex, squaredefender):
 							ischeck = True
 
 		if squaredefender==1:
-			if list[squarey+1][squarex-1]=="P" or list[squarey+1][squarex+1]=="P":
-				ischeck = True
+			if squarey<=6:
+				if squarex>=1:
+					if list[squarey+1][squarex-1]=="P":
+						ischeck = True
+				if squarex<=6:
+					if list[squarey+1][squarex+1]=="P":
+						ischeck = True
 			if ischeck == False:
 				ways=0
 				squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
@@ -303,6 +313,14 @@ def aftermove(list): # Handles Check and promotion
 		list[0][list[0].index("P")]="Q"
 	elif "p" in list[7]:
 		list[7][list[7].index("p")]="q"
+
+def canmove(list, whotoplay):
+	for y in range(8):
+		for x in range(8):
+			if list[y][x] in all_pieces[whotoplay]:
+				if possible_squares(list, list[y][x], y, x)!=[]:
+					return True
+	return False
 
 def init(FEN_string):
 	"""Initializes with a FEN string or a custom-format list from this file"""
@@ -373,7 +391,7 @@ def init(FEN_string):
 				
 				possibilities = []
 				possibilitieson = False
-				draw_board(list, possibilities, possibilitieson)
+				draw_board(list, possibilities)
 				dragged = False
 				globals()["bglist"][squarey][squarex]=0
 
@@ -388,7 +406,7 @@ def init(FEN_string):
 					dragged = True
 			
 			elif event.type == d.MOUSEMOTION and dragged:
-				draw_board(list, possibilities, True)
+				draw_board(list, possibilities)
 				blit_on_cursor(piece)
 				globals()["bglist"][squarey][squarex]=0
  
@@ -432,10 +450,19 @@ def init(FEN_string):
 						list[8][3] = [squarey, squarex]
 					else:
 						list[8][3] = [-1, -1]
+					if not canmove(list, list[8][0]%2):
+						if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
+							if list[8][0]%2==0:
+								print("Black wins !")
+							else:
+								print("White wins !")
+						else:
+							print("Draw : Stalemate !")
 				else:
 					list[startsquarey][startsquarex] = piece
 				draw_board(list, possibilities)
 				dragged = False
+			
 			
 			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
 				if dragged:
@@ -456,7 +483,7 @@ def init(FEN_string):
 					globals()["bglist"][squarey][squarex]=0
 				if list[squarey][squarex]!=0:
 					window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
-
+			
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
 		clock.tick(60)
