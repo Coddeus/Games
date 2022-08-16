@@ -1,4 +1,3 @@
-from cgitb import grey
 import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
@@ -21,8 +20,6 @@ bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
 all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
-startsquarex = 0 # TODO color the start/end squares of the latest move
-startsquarey = 0
 testsquarex = 0
 testsquarey = 0
 possible_squares = []
@@ -182,15 +179,101 @@ def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possib
 				else:
 					keepon = False
 	
-	elif piece == "K" or piece == "k": # TODO castles
+	elif piece == "K" or piece == "k":
 		squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
 		squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
 		for i, j in zip(squareyop, squarexop):
 			testsquarey, testsquarex = eval(i), eval(j)
 			if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex] not in all_pieces[list[8][0]%2]:
 				possible_squares.append([testsquarey, testsquarex])
-
+		if piece == "K":
+			if list[8][1][0]==1 and list[7][5]==0 and list[7][6]==0 and not (ischeck(list, 7, 4, 0) or ischeck(list, 7, 5, 0) or ischeck(list, 7, 6, 0)):
+				possible_squares.append([squarey, squarex+2])
+			if list[8][1][1]==1 and list[7][3]==0 and list[7][2]==0 and list[7][1]==0 and not (ischeck(list, 7, 4, 0) or ischeck(list, 7, 3, 0) or ischeck(list, 7, 2, 0)):
+				possible_squares.append([squarey, squarex-2])
+		if piece == "k":
+			if list[8][2][0]==1 and list[0][5]==0 and list[0][6]==0 and not (ischeck(list, 0, 4, 1) or ischeck(list, 0, 5, 1) or ischeck(list, 0, 6, 1)):
+				possible_squares.append([squarey, squarex+2])
+			if list[8][2][1]==1 and list[0][3]==0 and list[0][2]==0 and list[0][1]==0 and not (ischeck(list, 0, 4, 1) or ischeck(list, 0, 3, 1) or ischeck(list, 0, 2, 1)):
+				possible_squares.append([squarey, squarex-2])
 	return possible_squares
+
+def ischeck(list, squarey, squarex, squaredefender):
+	ischeck = False
+	conditions = ["squarex>=1 and squarey>=2", "squarex>=2 and squarey>=1", "squarex>=2 and squarey<=6", "squarex>=1 and squarey<=5", "squarex<=6 and squarey<=5", "squarex<=5 and squarey<=6", "squarex<=5 and squarey>=1", "squarex<=6 and squarey>=2"]
+	verify_squares = [[squarey-2, squarex-1], [squarey-1, squarex-2], [squarey+1, squarex-2], [squarey+2, squarex-1], [squarey+2, squarex+1], [squarey+1, squarex+2], [squarey-1, squarex+2], [squarey-2, squarex+1]]
+	for i in range(8):
+		if eval(conditions[i]):
+			if list[verify_squares[i][0]][verify_squares[i][1]] == all_pieces[(squaredefender+1)%2][1]:
+				ischeck = True
+	if ischeck == False:
+		if squaredefender==0:
+			if list[squarey-1][squarex-1]=="p" or list[squarey-1][squarex+1]=="p":
+				ischeck = True
+			if ischeck == False:
+				ways=0
+				squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
+				squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1", "testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
+				for i, j in zip(squareyop, squarexop):
+					testsquarex, testsquarey = squarex, squarey
+					keepon = True
+					while keepon and ischeck==False:
+						testsquarey, testsquarex = eval(i), eval(j)
+						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0:
+							if list[testsquarey][testsquarex] in all_pieces[0]:
+								keepon = False
+							elif list[testsquarey][testsquarex] in all_pieces[1]:
+								keepon = False
+								if ways<=3:
+									if list[testsquarey][testsquarex]=="q" or list[testsquarey][testsquarex]=="b":
+										ischeck = True
+								else:
+									if list[testsquarey][testsquarex]=="q" or list[testsquarey][testsquarex]=="r":
+										ischeck = True
+						else:
+							keepon = False
+					ways+=1
+				if ischeck == False:
+					squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
+					squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
+					for i, j in zip(squareyop, squarexop):
+						testsquarey, testsquarex = eval(i), eval(j)
+						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]=="k":
+							ischeck = True
+		if squaredefender==1:
+			if list[squarey+1][squarex-1]=="P" or list[squarey+1][squarex+1]=="P":
+				ischeck = True
+			if ischeck == False:
+				ways=0
+				squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
+				squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1", "testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
+				for i, j in zip(squareyop, squarexop):
+					testsquarex, testsquarey = squarex, squarey
+					keepon = True
+					while keepon and ischeck==False:
+						testsquarey, testsquarex = eval(i), eval(j)
+						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0:
+							if list[testsquarey][testsquarex] in all_pieces[1]:
+								keepon = False
+							elif list[testsquarey][testsquarex] in all_pieces[0]:
+								keepon = False
+								if ways<=3:
+									if list[testsquarey][testsquarex]=="Q" or list[testsquarey][testsquarex]=="B":
+										ischeck = True
+								else:
+									if list[testsquarey][testsquarex]=="Q" or list[testsquarey][testsquarex]=="R":
+										ischeck = True
+						else:
+							keepon = False
+					ways+=1
+				if ischeck == False:
+					squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
+					squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
+					for i, j in zip(squareyop, squarexop):
+						testsquarey, testsquarex = eval(i), eval(j)
+						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]=="K":
+							ischeck = True
+	return ischeck
 
 def aftermove(list): # Handles Check and promotion 
 	if "P" in list[0]: # TODO handle Check, mate, stalemate, endgame draws and all promotions
@@ -199,7 +282,7 @@ def aftermove(list): # Handles Check and promotion
 		list[7][list[7].index("p")]="q"
 
 def init(FEN_string):
-	"""Initializes with a FEN string or a custom format list from this file""" # TODO other formats to read ?
+	"""Initializes with a FEN string or a custom-format list from this file"""
 	if "/" in FEN_string:
 		list = str_to_list(FEN_string)
 
@@ -229,6 +312,32 @@ def init(FEN_string):
 				if possibilitieson and [squarey, squarex] in possibilities:
 					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
 						list[list[8][3][0]][list[8][3][1]] = 0
+					elif piece == "K":
+						if squarey==7 and squarex ==6 and list[8][1][0]==1:
+							list[7][7]=0
+							list[7][5]="R"
+						elif squarey==7 and squarex ==2 and list[8][1][1]==1:
+							list[7][0]=0
+							list[7][3]="R"
+						list[8][1][0], list[8][1][1] = 0, 0
+					elif piece == "k":
+						if squarey==0 and squarex ==6 and list[8][2][0]==1:
+							list[0][7]=0
+							list[0][5]="r"
+						elif squarey==0 and squarex ==2 and list[8][2][1]==1:
+							list[0][0]=0
+							list[0][3]="r"
+						list[8][2][0], list[8][2][1] = 0, 0
+					elif piece == "R":
+						if list[7][7]==0:
+							list[8][1][0]=0
+						elif list[7][0]==0:
+							list[8][1][1]=0
+					elif piece == "r":
+						if list[0][7]==0:
+							list[8][2][0]=0
+						elif list[0][0]==0:
+							list[8][2][1]=0
 					list[startsquarey][startsquarex] = 0
 					list[squarey][squarex] = piece
 					aftermove(list)
@@ -264,9 +373,35 @@ def init(FEN_string):
 				if [squarey, squarex] in possibilities:
 					possibilities = []
 					possibilitieson = False
+					list[squarey][squarex] = piece
 					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
 						list[list[8][3][0]][list[8][3][1]] = 0
-					list[squarey][squarex] = piece
+					elif piece == "K":
+						if squarey==7 and squarex ==6 and list[8][1][0]==1:
+							list[7][7]=0
+							list[7][5]="R"
+						elif squarey==7 and squarex ==2 and list[8][1][1]==1:
+							list[7][0]=0
+							list[7][3]="R"
+						list[8][1][0], list[8][1][1] = 0, 0
+					elif piece == "k":
+						if squarey==0 and squarex ==6 and list[8][2][0]==1:
+							list[0][7]=0
+							list[0][5]="r"
+						elif squarey==0 and squarex ==2 and list[8][2][1]==1:
+							list[0][0]=0
+							list[0][3]="r"
+						list[8][2][0], list[8][2][1] = 0, 0
+					elif piece == "R":
+						if list[7][7]==0:
+							list[8][1][0]=0
+						elif list[7][0]==0:
+							list[8][1][1]=0
+					elif piece == "r":
+						if list[0][7]==0:
+							list[8][2][0]=0
+						elif list[0][0]==0:
+							list[8][2][1]=0
 					aftermove(list)
 					list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
 					list[8][0]+=1
