@@ -196,7 +196,26 @@ def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possib
 				possible_squares.append([squarey, squarex+2])
 			if list[8][2][1]==1 and list[0][3]==0 and list[0][2]==0 and list[0][1]==0 and not (ischeck(list, 0, 4, 1) or ischeck(list, 0, 3, 1) or ischeck(list, 0, 2, 1)):
 				possible_squares.append([squarey, squarex-2])
+	
+	for coor in reversed(possible_squares):
+		savecoor = list[coor[0]][coor[1]]
+		list[squarey][squarex]=0
+		list[coor[0]][coor[1]]=piece
+		if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
+			possible_squares.remove(coor)
+		list[squarey][squarex]=piece
+		list[coor[0]][coor[1]]=savecoor
 	return possible_squares
+
+def king_coor(list): # place of the king which color has to play
+	if list[8][0]%2==0:
+		king="K"
+	else:
+		king="k"
+	for y in range(8):
+		for x in range(8):
+			if list[y][x]==king:
+				return y, x
 
 def ischeck(list, squarey, squarex, squaredefender):
 	ischeck = False
@@ -206,7 +225,9 @@ def ischeck(list, squarey, squarex, squaredefender):
 		if eval(conditions[i]):
 			if list[verify_squares[i][0]][verify_squares[i][1]] == all_pieces[(squaredefender+1)%2][1]:
 				ischeck = True
+
 	if ischeck == False:
+
 		if squaredefender==0:
 			if list[squarey-1][squarex-1]=="p" or list[squarey-1][squarex+1]=="p":
 				ischeck = True
@@ -240,6 +261,7 @@ def ischeck(list, squarey, squarex, squaredefender):
 						testsquarey, testsquarex = eval(i), eval(j)
 						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]=="k":
 							ischeck = True
+
 		if squaredefender==1:
 			if list[squarey+1][squarex-1]=="P" or list[squarey+1][squarex+1]=="P":
 				ischeck = True
@@ -414,7 +436,11 @@ def init(FEN_string):
 				draw_board(list, possibilities)
 				dragged = False
 			
-			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
+			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
+				if dragged:
+					list[startsquarey][startsquarex] = piece
+				draw_board(list, possibilities)
+				dragged = False
 				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
 					if (squarex+squarey)%2==1: # TODO Premoves
 						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
