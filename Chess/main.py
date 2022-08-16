@@ -2,9 +2,10 @@ import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
 from math import floor
-# TODO make a start menu
+# TODO make a start menu with PvP, PvC, computer analysis
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
+# TODO timed games
 # Global variables declaringlist
 clock = d.time.Clock()
 window = d.display.set_mode((800, 800), d.SCALED, d.SRCALPHA)
