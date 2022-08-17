@@ -2,10 +2,13 @@ import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
 from math import floor
+
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
 # TODO timed games
+# TODO show coordinates on board
+
 # Global variables declaringlist
 clock = d.time.Clock()
 window = d.display.set_mode((800, 800), d.SRCALPHA, d.SCALED)
@@ -15,8 +18,9 @@ light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what
 dark = d.Color(102, 51, 0)
 lightblue = d.Color(100, 100, 255)
 darkblue = d.Color(40, 40, 100)
-lightorange = d.Color(172, 86, 57)
-darkorange = d.Color(102, 31, 0)
+lightorange = d.Color(120, 80, 40)
+darkorange = d.Color(60, 30, 0)
+red = d.Color(150,0,0)
 bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()
@@ -67,7 +71,7 @@ def str_to_list(FEN_string):
 		position_list[8][2][1]=1
 	return position_list
 
-def draw_board(list, possibilities=[]):
+def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-1, startsquarex=-1):
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -80,6 +84,21 @@ def draw_board(list, possibilities=[]):
 				d.draw.rect(window, darkorange, (c[1]*100, c[0]*100, 100, 100))
 			else:
 				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100))
+	if kingmoving:
+		if ischeck(list, startsquarey, startsquarex, list[8][0]%2):
+			d.draw.rect(window, red, (startsquarex*100, startsquarey*100, 100, 100))
+			if (startsquarex+startsquarey)%2==1:
+				d.draw.circle(window, dark, (startsquarex*100+50, startsquarey*100+50), 50)
+			else:
+				d.draw.circle(window, light, (startsquarex*100+50, startsquarey*100+50), 50)
+	else:
+		kingsquareyx = king_coor(list)
+		if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
+			d.draw.rect(window, red, (kingsquareyx[1]*100, kingsquareyx[0]*100, 100, 100))
+			if (kingsquareyx[1]+kingsquareyx[0])%2==1:
+				d.draw.circle(window, dark, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
+			else:
+				d.draw.circle(window, light, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
 	for y in range(8):
 		for x in range(8):
 			if list[y][x]==0:
@@ -88,6 +107,7 @@ def draw_board(list, possibilities=[]):
 				window.blit(globals()[list[y][x]], (100*x+globals()[list[y][x]+"xy"][0],100*y+globals()[list[y][x]+"xy"][1]))
 	for p in possibilities:
 		gfxd.filled_circle(window, 100*p[1]+48,100*p[0]+48, 15, (50,50,50,100))
+	globals()["bglist"] = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
@@ -349,8 +369,6 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 			list[8][2][1]=0
 	list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
 	list[8][0]+=1
-	if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
-		pass # TODO 
 	if not canmove(list, list[8][0]%2):
 		if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
 			if list[8][0]%2==0:
@@ -396,28 +414,29 @@ def init(FEN_string):
 				running = False
 			
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+				draw_board(list)
 				if possibilitieson and [squarey, squarex] in possibilities:
 					list[startsquarey][startsquarex] = 0
-					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
 					possibilities = []
 					possibilitieson = False
-				draw_board(list, possibilities)
+					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
+					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
+				possibilities = []
+				possibilitieson = False
 				dragged = False
-				globals()["bglist"][squarey][squarex]=0
 				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
 					startsquarey, startsquarex = squarey, squarex
 					piece = list[squarey][squarex]
 					possibilities = possible_squares(list,piece,squarey,squarex)
 					possibilitieson = True
 					list[squarey][squarex] = 0
-					draw_board(list, possibilities)
+					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 					blit_on_cursor(piece)
 					dragged = True
 			
 			elif event.type == d.MOUSEMOTION and dragged:
-				draw_board(list, possibilities)
+				draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				blit_on_cursor(piece)
-				globals()["bglist"][squarey][squarex]=0
  
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
 				if [squarey, squarex] in possibilities:
@@ -426,14 +445,13 @@ def init(FEN_string):
 					possibilitieson = False
 				else:
 					list[startsquarey][startsquarex] = piece
-				draw_board(list, possibilities)
+				draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				dragged = False
 
 
-			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
+			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO repair + add other colors with right click and alt / ctrl    // custom color
 				if dragged:
 					list[startsquarey][startsquarex] = piece
-				draw_board(list, possibilities)
 				dragged = False
 				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
 					if (squarex+squarey)%2==1: # TODO Premoves
