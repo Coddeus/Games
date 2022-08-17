@@ -2,7 +2,7 @@ import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
 from math import floor
-# TODO make a start menu with PvP, PvC, computer analysis
+# TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
 # TODO timed games
@@ -93,7 +93,7 @@ def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
 	window.blit(globals()[piece], coordinates)
 
-def possible_squares(list,piece,squarey,squarex): # TODO remove pins from possible_squares at the end of the ifs
+def possible_squares(list,piece,squarey,squarex):
 	possible_squares = [] # TODO user choice to show possible squares when piece is clicked or not
 
 	if piece == "P":
@@ -308,17 +308,17 @@ def ischeck(list, squarey, squarex, squaredefender):
 							ischeck = True
 	return ischeck
 
-def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO PUT DOUBLED STUFF HERE # TODO handle endgame draws and all promotions
+def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO handle endgame draws (timed), moves repetition, 50 moves rule and all promotions
 	list[squarey][squarex] = piece
 	if piece == "p" or piece == "P":
+		if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
+			list[list[8][3][0]][list[8][3][1]] = 0
 		if squarey == startsquarey-2 or squarey == startsquarey+2:
 			list[8][3] = [squarey, squarex]
 		else:
 			list[8][3] = [-1, -1]
-		if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
-			list[list[8][3][0]][list[8][3][1]] = 0
 		if "P" in list[0]: 
-			list[0][list[0].index("P")]="Q" # TODO handle all promotions
+			list[0][list[0].index("P")]="Q"
 		elif "p" in list[7]:
 			list[7][list[7].index("p")]="q"
 	elif piece == "K":
@@ -349,6 +349,8 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 			list[8][2][1]=0
 	list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
 	list[8][0]+=1
+	if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
+		pass # TODO 
 	if not canmove(list, list[8][0]%2):
 		if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
 			if list[8][0]%2==0:
@@ -356,7 +358,7 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 			else:
 				print("White wins !")
 		else:
-			print("Draw : Stalemate !")
+			print("Draw : Stalemate !") # TODO animate end of game
 
 def canmove(list, whotoplay):
 	for y in range(8):
@@ -397,10 +399,11 @@ def init(FEN_string):
 				if possibilitieson and [squarey, squarex] in possibilities:
 					list[startsquarey][startsquarex] = 0
 					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
+					possibilities = []
+					possibilitieson = False
 				draw_board(list, possibilities)
 				dragged = False
 				globals()["bglist"][squarey][squarex]=0
-
 				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
 					startsquarey, startsquarex = squarey, squarex
 					piece = list[squarey][squarex]
@@ -426,7 +429,7 @@ def init(FEN_string):
 				draw_board(list, possibilities)
 				dragged = False
 
-			
+
 			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
 				if dragged:
 					list[startsquarey][startsquarex] = piece
@@ -461,4 +464,4 @@ def count_positions(n):
 	pass
 
 # Start with chess start position
-init(start_position) # TODO online multiplayer / play vs engine / engine evaluator / AI trainer
+init(start_position)
