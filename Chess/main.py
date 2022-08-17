@@ -268,7 +268,7 @@ def ischeck(list, squarey, squarex, squaredefender):
 						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]=="k":
 							ischeck = True
 
-		if squaredefender==1:
+		elif squaredefender==1:
 			if squarey<=6:
 				if squarex>=1:
 					if list[squarey+1][squarex-1]=="P":
@@ -308,11 +308,55 @@ def ischeck(list, squarey, squarex, squaredefender):
 							ischeck = True
 	return ischeck
 
-def aftermove(list): # Handles Check and promotion 
-	if "P" in list[0]: # TODO handle Check, mate, stalemate, endgame draws and all promotions
-		list[0][list[0].index("P")]="Q"
-	elif "p" in list[7]:
-		list[7][list[7].index("p")]="q"
+def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO PUT DOUBLED STUFF HERE # TODO handle endgame draws and all promotions
+	list[squarey][squarex] = piece
+	if piece == "p" or piece == "P":
+		if squarey == startsquarey-2 or squarey == startsquarey+2:
+			list[8][3] = [squarey, squarex]
+		else:
+			list[8][3] = [-1, -1]
+		if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
+			list[list[8][3][0]][list[8][3][1]] = 0
+		if "P" in list[0]: 
+			list[0][list[0].index("P")]="Q" # TODO handle all promotions
+		elif "p" in list[7]:
+			list[7][list[7].index("p")]="q"
+	elif piece == "K":
+		if squarey==7 and squarex ==6 and list[8][1][0]==1:
+			list[7][7]=0
+			list[7][5]="R"
+		elif squarey==7 and squarex ==2 and list[8][1][1]==1:
+			list[7][0]=0
+			list[7][3]="R"
+		list[8][1][0], list[8][1][1] = 0, 0
+	elif piece == "k":
+		if squarey==0 and squarex ==6 and list[8][2][0]==1:
+			list[0][7]=0
+			list[0][5]="r"
+		elif squarey==0 and squarex ==2 and list[8][2][1]==1:
+			list[0][0]=0
+			list[0][3]="r"
+		list[8][2][0], list[8][2][1] = 0, 0
+	elif piece == "R" and (list[8][1][0]==1 or list[8][1][1]==1):
+		if list[7][7]==0:
+			list[8][1][0]=0
+		elif list[7][0]==0:
+			list[8][1][1]=0
+	elif piece == "r" and (list[8][2][0]==1 or list[8][2][1]==1):
+		if list[0][7]==0:
+			list[8][2][0]=0
+		elif list[0][0]==0:
+			list[8][2][1]=0
+	list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
+	list[8][0]+=1
+	if not canmove(list, list[8][0]%2):
+		if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
+			if list[8][0]%2==0:
+				print("Black wins !")
+			else:
+				print("White wins !")
+		else:
+			print("Draw : Stalemate !")
 
 def canmove(list, whotoplay):
 	for y in range(8):
@@ -351,46 +395,8 @@ def init(FEN_string):
 			
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 				if possibilitieson and [squarey, squarex] in possibilities:
-					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
-						list[list[8][3][0]][list[8][3][1]] = 0
-					elif piece == "K":
-						if squarey==7 and squarex ==6 and list[8][1][0]==1:
-							list[7][7]=0
-							list[7][5]="R"
-						elif squarey==7 and squarex ==2 and list[8][1][1]==1:
-							list[7][0]=0
-							list[7][3]="R"
-						list[8][1][0], list[8][1][1] = 0, 0
-					elif piece == "k":
-						if squarey==0 and squarex ==6 and list[8][2][0]==1:
-							list[0][7]=0
-							list[0][5]="r"
-						elif squarey==0 and squarex ==2 and list[8][2][1]==1:
-							list[0][0]=0
-							list[0][3]="r"
-						list[8][2][0], list[8][2][1] = 0, 0
-					elif piece == "R":
-						if list[7][7]==0:
-							list[8][1][0]=0
-						elif list[7][0]==0:
-							list[8][1][1]=0
-					elif piece == "r":
-						if list[0][7]==0:
-							list[8][2][0]=0
-						elif list[0][0]==0:
-							list[8][2][1]=0
 					list[startsquarey][startsquarex] = 0
-					list[squarey][squarex] = piece
-					aftermove(list)
-					list[8][0]+=1
-					list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
-					if (piece == "P" or piece == "p") and (squarey == startsquarey-2 or squarey == startsquarey+2):
-						list[8][3] = [squarey, squarex]
-					else:
-						list[8][3] = [-1, -1]
-				
-				possibilities = []
-				possibilitieson = False
+					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
 				draw_board(list, possibilities)
 				dragged = False
 				globals()["bglist"][squarey][squarex]=0
@@ -412,57 +418,14 @@ def init(FEN_string):
  
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
 				if [squarey, squarex] in possibilities:
+					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
 					possibilities = []
 					possibilitieson = False
-					list[squarey][squarex] = piece
-					if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
-						list[list[8][3][0]][list[8][3][1]] = 0
-					elif piece == "K":
-						if squarey==7 and squarex ==6 and list[8][1][0]==1:
-							list[7][7]=0
-							list[7][5]="R"
-						elif squarey==7 and squarex ==2 and list[8][1][1]==1:
-							list[7][0]=0
-							list[7][3]="R"
-						list[8][1][0], list[8][1][1] = 0, 0
-					elif piece == "k":
-						if squarey==0 and squarex ==6 and list[8][2][0]==1:
-							list[0][7]=0
-							list[0][5]="r"
-						elif squarey==0 and squarex ==2 and list[8][2][1]==1:
-							list[0][0]=0
-							list[0][3]="r"
-						list[8][2][0], list[8][2][1] = 0, 0
-					elif piece == "R":
-						if list[7][7]==0:
-							list[8][1][0]=0
-						elif list[7][0]==0:
-							list[8][1][1]=0
-					elif piece == "r":
-						if list[0][7]==0:
-							list[8][2][0]=0
-						elif list[0][0]==0:
-							list[8][2][1]=0
-					aftermove(list)
-					list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
-					list[8][0]+=1
-					if (piece == "P" or piece == "p") and (squarey == startsquarey-2 or squarey == startsquarey+2):
-						list[8][3] = [squarey, squarex]
-					else:
-						list[8][3] = [-1, -1]
-					if not canmove(list, list[8][0]%2):
-						if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
-							if list[8][0]%2==0:
-								print("Black wins !")
-							else:
-								print("White wins !")
-						else:
-							print("Draw : Stalemate !")
 				else:
 					list[startsquarey][startsquarex] = piece
 				draw_board(list, possibilities)
 				dragged = False
-			
+
 			
 			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
 				if dragged:
@@ -498,4 +461,4 @@ def count_positions(n):
 	pass
 
 # Start with chess start position
-init(start_position) # TODO online multiplayer / play vs engine / engine evaluator
+init(start_position) # TODO online multiplayer / play vs engine / engine evaluator / AI trainer
