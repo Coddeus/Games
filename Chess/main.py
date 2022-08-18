@@ -43,7 +43,7 @@ def list_to_str(chess_board):
 def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
-	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,[0,0],[0,0],[0,0],0,1], [[0,0],[0,0]]]
+	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,[0,0],[0,0],[0,0],0], [[0,0],[0,0]]]
 	position_listx = 0
 	position_listy = 0
 	numbers = ["1","2","3","4","5","6","7","8"]
@@ -416,6 +416,13 @@ def init(FEN_string):
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 				draw_board(list)
 				if possibilitieson and [squarey, squarex] in possibilities:
+					if piece == "p" or piece == "P" or list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[0]:
+						list[8][4]=0
+					else:
+						list[8][4]+=1
+						if list[8][4]>=50:
+							print("Draw : 50 moves rule !")
+					print(list[8][4])
 					list[startsquarey][startsquarex] = 0
 					possibilities = []
 					possibilitieson = False
@@ -440,9 +447,15 @@ def init(FEN_string):
  
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
 				if [squarey, squarex] in possibilities:
-					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
+					if piece == "p" or piece == "P" or list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[0]:
+						list[8][4]=0
+					else:
+						list[8][4]+=1
+						if list[8][4]>=50:
+							print("Draw : 50 moves rule !")
 					possibilities = []
 					possibilitieson = False
+					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
 				else:
 					list[startsquarey][startsquarex] = piece
 				draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
