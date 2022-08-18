@@ -71,34 +71,26 @@ def str_to_list(FEN_string):
 		position_list[8][2][1]=1
 	return position_list
 
-def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-1, startsquarex=-1):
+def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
 				d.draw.rect(window, dark, (x*100, y*100, 100, 100))
 			else:
 				d.draw.rect(window, light, (x*100, y*100, 100, 100))
+	kingsquareyx = king_coor(list) if not kingmoving else [startsquarey,startsquarex]
+	if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
+		d.draw.rect(window, red, (kingsquareyx[1]*100, kingsquareyx[0]*100, 100, 100))
+		if (kingsquareyx[1]+kingsquareyx[0])%2==1:
+			d.draw.circle(window, dark, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
+		else:
+			d.draw.circle(window, light, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
 	if list[8][0]>=1:
 		for c in list[9]:
 			if (c[0]+c[1])%2==1:
 				d.draw.rect(window, darkorange, (c[1]*100, c[0]*100, 100, 100))
 			else:
-				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100))
-	if kingmoving:
-		if ischeck(list, startsquarey, startsquarex, list[8][0]%2):
-			d.draw.rect(window, red, (startsquarex*100, startsquarey*100, 100, 100))
-			if (startsquarex+startsquarey)%2==1:
-				d.draw.circle(window, dark, (startsquarex*100+50, startsquarey*100+50), 50)
-			else:
-				d.draw.circle(window, light, (startsquarex*100+50, startsquarey*100+50), 50)
-	else:
-		kingsquareyx = king_coor(list)
-		if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
-			d.draw.rect(window, red, (kingsquareyx[1]*100, kingsquareyx[0]*100, 100, 100))
-			if (kingsquareyx[1]+kingsquareyx[0])%2==1:
-				d.draw.circle(window, dark, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
-			else:
-				d.draw.circle(window, light, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
+				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100)) 
 	for y in range(8):
 		for x in range(8):
 			if list[y][x]==0:
@@ -377,6 +369,8 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 				print("White wins !")
 		else:
 			print("Draw : Stalemate !") # TODO animate end of game
+	if list[8][4]>=50:
+		print("Draw : 50 moves rule !")
 
 def canmove(list, whotoplay):
 	for y in range(8):
@@ -420,9 +414,6 @@ def init(FEN_string):
 						list[8][4]=0
 					else:
 						list[8][4]+=1
-						if list[8][4]>=50:
-							print("Draw : 50 moves rule !")
-					print(list[8][4])
 					list[startsquarey][startsquarex] = 0
 					possibilities = []
 					possibilitieson = False
@@ -451,8 +442,6 @@ def init(FEN_string):
 						list[8][4]=0
 					else:
 						list[8][4]+=1
-						if list[8][4]>=50:
-							print("Draw : 50 moves rule !")
 					possibilities = []
 					possibilitieson = False
 					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
@@ -465,6 +454,9 @@ def init(FEN_string):
 			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO repair + add other colors with right click and alt / ctrl    // custom color
 				if dragged:
 					list[startsquarey][startsquarex] = piece
+					possibilities = []
+					possibilitieson = False
+					draw_board(list)
 				dragged = False
 				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
 					if (squarex+squarey)%2==1: # TODO Premoves
