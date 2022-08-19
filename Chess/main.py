@@ -1,7 +1,9 @@
+from xml.dom.minidom import TypeInfo
 import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
 from math import floor
+import copy
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
@@ -35,6 +37,8 @@ bxy = Bxy = kxy = Kxy = (18,18)
 rxy = Rxy = (20,18)
 qxy = Qxy = (15,18)
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+game_positions = []
+isfinished = False
 
 def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
@@ -69,6 +73,7 @@ def str_to_list(FEN_string):
 		position_list[8][2][0]=1
 	if "q" in FEN_list[2]:
 		position_list[8][2][1]=1
+	globals()["game_positions"].append(copy.deepcopy([position_list[:8], position_list[8][0]%2, position_list[8][1:4], 1]))
 	return position_list
 
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
@@ -321,8 +326,13 @@ def ischeck(list, squarey, squarex, squaredefender):
 	return ischeck
 
 def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO handle endgame draws (timed), moves repetition and all promotions
+	global game_positions
+	global isfinished
+	if list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[1]:
+		game_positions=[game_positions[-1]]
 	list[squarey][squarex] = piece
 	if piece == "p" or piece == "P":
+		game_positions=[game_positions[-1]]
 		if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
 			list[list[8][3][0]][list[8][3][1]] = 0
 		if squarey == startsquarey-2 or squarey == startsquarey+2:
@@ -360,17 +370,33 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 		elif list[0][0]==0:
 			list[8][2][1]=0
 	list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
+	addposition = True
+	repetition_draw_transformed_list = [list[:8], list[8][0]%2, list[8][1:4], 1]
+	for n in range(len(game_positions)):
+		if repetition_draw_transformed_list[:3]==game_positions[n][:3]:
+			addposition = False
+			game_positions[n][3]+=1
+			if game_positions[n][3]>=5:
+				print("Draw : Repetition !")
+				isfinished = True
+			break
+	if addposition:
+		game_positions.append(copy.deepcopy(repetition_draw_transformed_list))
 	list[8][0]+=1
 	if not canmove(list, list[8][0]%2):
 		if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
 			if list[8][0]%2==0:
 				print("Black wins !")
+				isfinished = True
 			else:
 				print("White wins !")
+				isfinished = True
 		else:
-			print("Draw : Stalemate !") # TODO animate end of game lost king flip on red square, won king on green, particle stars around
+			print("Draw : Stalemate !") # TODO animate end of game lost king flip on red square, won king on green, particle stars around ; Draw = 360° kings
+			isfinished = True
 	if list[8][4]>=50:
 		print("Draw : 50 moves rule !")
+		isfinished = True
 
 def canmove(list, whotoplay):
 	for y in range(8):
@@ -397,6 +423,7 @@ def init(FEN_string):
 	d.display.update()
 	buttons = d.mouse.get_pressed(5)
 
+	global isfinished
 	possibilities = []
 	possibilitieson = False
 	running = True
@@ -428,8 +455,9 @@ def init(FEN_string):
 				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
 					startsquarey, startsquarex = squarey, squarex
 					piece = list[squarey][squarex]
-					possibilities = possible_squares(list,piece,squarey,squarex)
-					possibilitieson = True
+					if isfinished == False:
+						possibilities = possible_squares(list,piece,squarey,squarex)
+						possibilitieson = True
 					list[squarey][squarex] = 0
 					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 					blit_on_cursor(piece)
@@ -462,7 +490,7 @@ def init(FEN_string):
 					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				dragged = False
 				artsquarey, artsquarex = squarey, squarex
-				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows : obects ? -> to be removed
+				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows : objects ? -> in order to be removed
 					if (squarex+squarey)%2==1: # TODO Premoves
 						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
 					else:
@@ -486,7 +514,7 @@ def init(FEN_string):
 			
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
-		clock.tick(60)
+		clock.tick(100)
 	d.quit()
 
 def count_combinations(n):
