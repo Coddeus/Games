@@ -320,7 +320,7 @@ def ischeck(list, squarey, squarex, squaredefender):
 							ischeck = True
 	return ischeck
 
-def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO handle endgame draws (timed), moves repetition, 50 moves rule and all promotions
+def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO handle endgame draws (timed), moves repetition and all promotions
 	list[squarey][squarex] = piece
 	if piece == "p" or piece == "P":
 		if (piece == "P" and squarey == list[8][3][0]-1 and squarex == list[8][3][1]) or (piece == "p" and squarey == list[8][3][0]+1 and squarex == list[8][3][1]):
@@ -368,7 +368,7 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 			else:
 				print("White wins !")
 		else:
-			print("Draw : Stalemate !") # TODO animate end of game
+			print("Draw : Stalemate !") # TODO animate end of game lost king flip on red square, won king on green, particle stars around
 	if list[8][4]>=50:
 		print("Draw : 50 moves rule !")
 
@@ -379,6 +379,9 @@ def canmove(list, whotoplay):
 				if possible_squares(list, list[y][x], y, x)!=[]:
 					return True
 	return False
+
+def draw_arrow(artsquarey, artsquarex, squarey, squarex):
+	pass
 
 def init(FEN_string):
 	"""Initializes with a FEN string or a custom-format list from this file"""
@@ -451,14 +454,15 @@ def init(FEN_string):
 				dragged = False
 
 
-			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO repair + add other colors with right click and alt / ctrl    // custom color
+			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
 				if dragged:
 					list[startsquarey][startsquarex] = piece
 					possibilities = []
 					possibilitieson = False
-					draw_board(list)
+					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				dragged = False
-				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
+				artsquarey, artsquarex = squarey, squarex
+				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows : obects ? -> to be removed
 					if (squarex+squarey)%2==1: # TODO Premoves
 						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
 					else:
@@ -472,6 +476,13 @@ def init(FEN_string):
 					globals()["bglist"][squarey][squarex]=0
 				if list[squarey][squarex]!=0:
 					window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
+			
+			elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False: 
+				draw_arrow(artsquarey, artsquarex, squarey, squarex)
+
+			elif event.type == d.MOUSEMOTION and d.mouse.get_pressed(5)[2]==True:
+				draw_arrow(artsquarey, artsquarex, squarey, squarex)
+				artsquarey, artsquarex = 0, 0
 			
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
