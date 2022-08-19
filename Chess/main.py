@@ -11,7 +11,7 @@ import copy
 # TODO timed games
 # TODO show coordinates on board
 
-# Global variables declaringlist
+# Global variables declaring list
 clock = d.time.Clock()
 window = d.display.set_mode((800, 800), d.SRCALPHA, d.SCALED)
 icon = d.image.load("Assets\Icons\WindowIcon.png")
@@ -39,6 +39,7 @@ qxy = Qxy = (15,18)
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 game_positions = []
 isfinished = False
+uncolored = False
 
 def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
@@ -406,11 +407,35 @@ def canmove(list, whotoplay):
 					return True
 	return False
 
-def draw_arrow(artsquarey, artsquarex, squarey, squarex):
-	pass
+def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice to only
+	global uncolored
+	global list
+	if [artsquarey, artsquarex] != [squarey, squarex] and uncolored == False:
+		if globals()["bglist"][artsquarey][artsquarex]==0: #TODO draw arrows : objects ? -> in order to be removed
+			if (artsquarex+artsquarey)%2==1: # TODO Premoves
+				d.draw.rect(window, darkblue, (artsquarex*100, artsquarey*100, 100, 100))
+			else:
+				d.draw.rect(window, lightblue, (artsquarex*100, artsquarey*100, 100, 100))
+			globals()["bglist"][artsquarey][artsquarex]=1
+		elif globals()["bglist"][artsquarey][artsquarex]==1:
+			if (artsquarex+artsquarey)%2==1:
+				d.draw.rect(window, dark, (artsquarex*100, artsquarey*100, 100, 100))
+			else:
+				d.draw.rect(window, light, (artsquarex*100, artsquarey*100, 100, 100))
+			globals()["bglist"][artsquarey][artsquarex]=0
+		if globals()["bglist"][artsquarey][artsquarex]==1:
+			globals()["bglist"][artsquarey][artsquarex]=0
+		else:
+			globals()["bglist"][artsquarey][artsquarex]=1
+		if list[artsquarey][artsquarex]!=0:
+			window.blit(globals()[list[artsquarey][artsquarex]], (100*artsquarex+globals()[list[artsquarey][artsquarex]+"xy"][0],100*artsquarey+globals()[list[artsquarey][artsquarex]+"xy"][1]))
+		gfxd.filled_circle(window, 100*artsquarex+48, 100*artsquarey+48, 10, (0,100,0,150))
+		uncolored = True
+		print(list)
 
 def init(FEN_string):
 	"""Initializes with a FEN string or a custom-format list from this file"""
+	global list
 	if "/" in FEN_string:
 		list = str_to_list(FEN_string)
 
@@ -424,10 +449,12 @@ def init(FEN_string):
 	buttons = d.mouse.get_pressed(5)
 
 	global isfinished
+	global uncolored
 	possibilities = []
 	possibilitieson = False
 	running = True
 	dragged = False
+	drawing = False
 	while running: # TODO end chess rules
 		for event in d.event.get(): #TODO review ifs order, makes it user-friendly with several clicks at a time (customizable)
 
@@ -489,6 +516,8 @@ def init(FEN_string):
 					possibilitieson = False
 					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				dragged = False
+				drawing = True
+				uncolored = False
 				artsquarey, artsquarex = squarey, squarex
 				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows : objects ? -> in order to be removed
 					if (squarex+squarey)%2==1: # TODO Premoves
@@ -505,12 +534,13 @@ def init(FEN_string):
 				if list[squarey][squarex]!=0:
 					window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
 			
-			elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False: 
+			elif event.type == d.MOUSEMOTION and drawing:
 				draw_arrow(artsquarey, artsquarex, squarey, squarex)
 
-			elif event.type == d.MOUSEMOTION and d.mouse.get_pressed(5)[2]==True:
+			elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False: 
 				draw_arrow(artsquarey, artsquarex, squarey, squarex)
-				artsquarey, artsquarex = 0, 0
+				drawing = False
+
 			
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
