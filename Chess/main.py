@@ -1,8 +1,9 @@
+from cmath import cos, sin
 from xml.dom.minidom import TypeInfo
 import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
-from math import floor
+from math import floor, pi, radians, sin, cos, atan
 import copy
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
@@ -13,7 +14,7 @@ import copy
 
 # Global variables declaring list
 clock = d.time.Clock()
-window = d.display.set_mode((800, 800), d.SRCALPHA, d.SCALED)
+window = d.display.set_mode((800, 800), d.SCALED)
 icon = d.image.load("Assets\Icons\WindowIcon.png")
 white = d.Color(255,255,255)
 light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what else ?)
@@ -40,6 +41,8 @@ start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 game_positions = []
 isfinished = False
 uncolored = False
+arrows_list = []
+startartsquare = []
 
 def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
@@ -379,6 +382,7 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 			game_positions[n][3]+=1
 			if game_positions[n][3]>=5:
 				print("Draw : Repetition !")
+				d.display.set_caption('No one\'s game')
 				isfinished = True
 			break
 	if addposition:
@@ -388,15 +392,19 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 		if ischeck(list, king_coor(list)[0], king_coor(list)[1], list[8][0]%2):
 			if list[8][0]%2==0:
 				print("Black wins !")
+				d.display.set_caption('Black\'s game')
 				isfinished = True
 			else:
 				print("White wins !")
+				d.display.set_caption('White\'s game')
 				isfinished = True
 		else:
 			print("Draw : Stalemate !") # TODO animate end of game lost king flip on red square, won king on green, particle stars around ; Draw = 360° kings
+			d.display.set_caption('No one\'s game')
 			isfinished = True
 	if list[8][4]>=50:
 		print("Draw : 50 moves rule !")
+		d.display.set_caption('No one\'s game')
 		isfinished = True
 
 def canmove(list, whotoplay):
@@ -407,31 +415,50 @@ def canmove(list, whotoplay):
 					return True
 	return False
 
-def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice to only
+def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice draw arrows to only on possible squares
 	global uncolored
 	global list
-	if [artsquarey, artsquarex] != [squarey, squarex] and uncolored == False:
-		if globals()["bglist"][artsquarey][artsquarex]==0: #TODO draw arrows : objects ? -> in order to be removed
-			if (artsquarex+artsquarey)%2==1: # TODO Premoves
-				d.draw.rect(window, darkblue, (artsquarex*100, artsquarey*100, 100, 100))
-			else:
-				d.draw.rect(window, lightblue, (artsquarex*100, artsquarey*100, 100, 100))
-			globals()["bglist"][artsquarey][artsquarex]=1
-		elif globals()["bglist"][artsquarey][artsquarex]==1:
-			if (artsquarex+artsquarey)%2==1:
-				d.draw.rect(window, dark, (artsquarex*100, artsquarey*100, 100, 100))
-			else:
-				d.draw.rect(window, light, (artsquarex*100, artsquarey*100, 100, 100))
-			globals()["bglist"][artsquarey][artsquarex]=0
-		if globals()["bglist"][artsquarey][artsquarex]==1:
-			globals()["bglist"][artsquarey][artsquarex]=0
-		else:
-			globals()["bglist"][artsquarey][artsquarex]=1
-		if list[artsquarey][artsquarex]!=0:
-			window.blit(globals()[list[artsquarey][artsquarex]], (100*artsquarex+globals()[list[artsquarey][artsquarex]+"xy"][0],100*artsquarey+globals()[list[artsquarey][artsquarex]+"xy"][1]))
-		gfxd.filled_circle(window, 100*artsquarex+48, 100*artsquarey+48, 10, (0,100,0,150))
-		uncolored = True
-		print(list)
+	global arrows_list
+	global startartsquare
+	if [artsquarey, artsquarex] != [squarey, squarex]:
+		if uncolored == False:
+			if globals()["bglist"][artsquarey][artsquarex]==0: #TODO draw arrows
+				if (artsquarex+artsquarey)%2==1: # TODO Premoves
+					d.draw.rect(window, darkblue, (artsquarex*100, artsquarey*100, 100, 100))
+				else:
+					d.draw.rect(window, lightblue, (artsquarex*100, artsquarey*100, 100, 100))
+				globals()["bglist"][artsquarey][artsquarex]=1
+			elif globals()["bglist"][artsquarey][artsquarex]==1:
+				if (artsquarex+artsquarey)%2==1:
+					d.draw.rect(window, dark, (artsquarex*100, artsquarey*100, 100, 100))
+				else:
+					d.draw.rect(window, light, (artsquarex*100, artsquarey*100, 100, 100))
+				globals()["bglist"][artsquarey][artsquarex]=0
+			if list[artsquarey][artsquarex]!=0:
+				window.blit(globals()[list[artsquarey][artsquarex]], (100*artsquarex+globals()[list[artsquarey][artsquarex]+"xy"][0],100*artsquarey+globals()[list[artsquarey][artsquarex]+"xy"][1]))
+			uncolored = True
+			startartsquare = [artsquarey, artsquarex]
+		if (startartsquare[0], startartsquare[1], squarey, squarex) not in arrows_list:
+			if arrows_list!=[]:
+				if arrows_list[-1]==(startartsquare[1], startartsquare[0], artsquarex, artsquarey):
+					arrows_list.pop(-1)
+			arrows_list.append((startartsquare[1], startartsquare[0], squarex, squarey))
+		draw_board(list)
+		for tuuuple in arrows_list:
+			"""xdiff = tuuuple[2]-tuuuple[0]
+			ydiff = tuuuple[3]-tuuuple[1]
+			xpixels = 10*(1-cos(atan(ydiff/xdiff)))
+			print("x : "+str(xpixels))
+			ypixels = 10*(1+sin(atan(ydiff/xdiff)))
+			print("y : "+str(ypixels))
+			#if xdiff==0:
+				
+			#elif ydiff==0:
+
+			#else:"""
+			gfxd.filled_polygon(window, ((100*tuuuple[0]+38,100*tuuuple[1]+48),(100*tuuuple[0]+58,100*tuuuple[1]+48),(100*tuuuple[2]+58,100*tuuuple[3]+48),(100*tuuuple[2]+38,100*tuuuple[3]+48)), (0,100,0,150))
+	
+			
 
 def init(FEN_string):
 	"""Initializes with a FEN string or a custom-format list from this file"""
@@ -450,6 +477,7 @@ def init(FEN_string):
 
 	global isfinished
 	global uncolored
+	global arrows_list
 	possibilities = []
 	possibilitieson = False
 	running = True
@@ -479,6 +507,9 @@ def init(FEN_string):
 				possibilities = []
 				possibilitieson = False
 				dragged = False
+				drawing = False
+				uncolored = False
+				arrows_list = []
 				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
 					startsquarey, startsquarex = squarey, squarex
 					piece = list[squarey][squarex]
@@ -541,7 +572,7 @@ def init(FEN_string):
 				draw_arrow(artsquarey, artsquarex, squarey, squarex)
 				drawing = False
 
-			
+			artsquarey, artsquarex = squarey, squarex
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
 		clock.tick(100)
