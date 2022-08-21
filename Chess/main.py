@@ -18,6 +18,7 @@ import copy
 # TODO end chess rules
 # TODO sometimes check if comfortable to play when devving
 # TODO add other colors with right click and alt / ctrl    // custom color
+# TODO user choice to rotate board
 
 # Global variables declaring list
 clock = d.time.Clock()
