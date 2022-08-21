@@ -1,9 +1,8 @@
-from cmath import cos, sin
-from xml.dom.minidom import TypeInfo
+from operator import countOf
 import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
-from math import floor, pi, radians, sin, cos, atan
+from math import floor, pi, radians, sin, cos, atan, sqrt
 import copy
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
@@ -15,7 +14,7 @@ import copy
 # Global variables declaring list
 clock = d.time.Clock()
 window = d.display.set_mode((800, 800), d.SCALED)
-icon = d.image.load("Assets\Icons\WindowIcon.png")
+icon = d.image.load("Assets\Icons\WindowIcon.png") #TODO Grey icon : White wins = White icon,,, Black wins = Black icon
 white = d.Color(255,255,255)
 light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what else ?)
 dark = d.Color(102, 51, 0)
@@ -43,6 +42,7 @@ isfinished = False
 uncolored = False
 arrows_list = []
 startartsquare = []
+isdropped = False
 
 def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
@@ -81,6 +81,7 @@ def str_to_list(FEN_string):
 	return position_list
 
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
+	global arrows_list
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -99,16 +100,43 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 			if (c[0]+c[1])%2==1:
 				d.draw.rect(window, darkorange, (c[1]*100, c[0]*100, 100, 100))
 			else:
-				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100)) 
+				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100))
 	for y in range(8):
 		for x in range(8):
-			if list[y][x]==0:
-				pass
-			else:
+			if globals()["bglist"][y][x]==1:
+				if (x+y)%2==1:
+					d.draw.rect(window, darkblue, (x*100, y*100, 100, 100))
+				else:
+					d.draw.rect(window, lightblue, (x*100, y*100, 100, 100))
+	for y in range(8):
+		for x in range(8):
+			if list[y][x]!=0:
 				window.blit(globals()[list[y][x]], (100*x+globals()[list[y][x]+"xy"][0],100*y+globals()[list[y][x]+"xy"][1]))
 	for p in possibilities:
 		gfxd.filled_circle(window, 100*p[1]+48,100*p[0]+48, 15, (50,50,50,100))
-	globals()["bglist"] = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
+	if arrows_list!=[]:
+		for tuuuple in arrows_list:
+			xdiff = tuuuple[2]-tuuuple[0]
+			ydiff = tuuuple[3]-tuuuple[1]
+			if not (xdiff==0 and ydiff==0):
+				if xdiff==0:
+					if ydiff>0:
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+38,100*tuuuple[1]+88),(100*tuuuple[0]+58,100*tuuuple[1]+88),(100*tuuuple[2]+58,100*tuuuple[3]+8),(100*tuuuple[2]+68,100*tuuuple[3]+8),(100*tuuuple[2]+48,100*tuuuple[3]+38),(100*tuuuple[2]+28,100*tuuuple[3]+8),(100*tuuuple[2]+38,100*tuuuple[3]+8)), (0,100,0,150))
+					else:
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+38,100*tuuuple[1]+8),(100*tuuuple[0]+58,100*tuuuple[1]+8),(100*tuuuple[2]+58,100*tuuuple[3]+88),(100*tuuuple[2]+68,100*tuuuple[3]+88),(100*tuuuple[2]+48,100*tuuuple[3]+58),(100*tuuuple[2]+28,100*tuuuple[3]+88),(100*tuuuple[2]+38,100*tuuuple[3]+88)), (0,100,0,150))
+				elif ydiff==0:
+					if xdiff>0:
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+88,100*tuuuple[1]+58),(100*tuuuple[0]+88,100*tuuuple[1]+38),(100*tuuuple[2]+8,100*tuuuple[3]+38),(100*tuuuple[2]+8,100*tuuuple[3]+28),(100*tuuuple[2]+38,100*tuuuple[3]+48),(100*tuuuple[2]+8,100*tuuuple[3]+68),(100*tuuuple[2]+8,100*tuuuple[3]+58)), (0,100,0,150))
+					else:
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+8,100*tuuuple[1]+58),(100*tuuuple[0]+8,100*tuuuple[1]+38),(100*tuuuple[2]+88,100*tuuuple[3]+38),(100*tuuuple[2]+88,100*tuuuple[3]+68),(100*tuuuple[2]+58,100*tuuuple[3]+48),(100*tuuuple[2]+88,100*tuuuple[3]+28),(100*tuuuple[2]+88,100*tuuuple[3]+58)), (0,100,0,150))
+				else:
+					sine = sin(atan(ydiff/xdiff))
+					ypixels = 10*sine
+					xpixels = 10*sqrt(1-sine**2)
+					if xdiff>0:
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+48+ypixels+4*xpixels,100*tuuuple[1]+48-xpixels+4*ypixels),(100*tuuuple[0]+48-ypixels+4*xpixels,100*tuuuple[1]+48+xpixels+4*ypixels),(100*tuuuple[2]+48-ypixels-4*xpixels,100*tuuuple[3]+48+xpixels-4*ypixels),(100*tuuuple[2]+48-2*ypixels-4*xpixels,100*tuuuple[3]+48+2*xpixels-4*ypixels),(100*tuuuple[2]+48-xpixels,100*tuuuple[3]+48-ypixels),(100*tuuuple[2]+48+2*ypixels-4*xpixels,100*tuuuple[3]+48-2*xpixels-4*ypixels),(100*tuuuple[2]+48+ypixels-4*xpixels,100*tuuuple[3]+48-xpixels-4*ypixels)), (0,100,0,150))
+					elif xdiff<0:
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+48+ypixels-4*xpixels,100*tuuuple[1]+48-xpixels-4*ypixels),(100*tuuuple[0]+48-ypixels-4*xpixels,100*tuuuple[1]+48+xpixels-4*ypixels),(100*tuuuple[2]+48-ypixels+4*xpixels,100*tuuuple[3]+48+xpixels+4*ypixels),(100*tuuuple[2]+48+2*ypixels+4*xpixels,100*tuuuple[3]+48-2*xpixels+4*ypixels),(100*tuuuple[2]+48+xpixels,100*tuuuple[3]+48+ypixels),(100*tuuuple[2]+48-2*ypixels+4*xpixels,100*tuuuple[3]+48+2*xpixels+4*ypixels),(100*tuuuple[2]+48+ypixels+4*xpixels,100*tuuuple[3]+48-xpixels+4*ypixels)), (0,100,0,150))
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
@@ -420,6 +448,27 @@ def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice draw arr
 	global list
 	global arrows_list
 	global startartsquare
+	global isdropped
+	if isdropped and arrows_list!=[]:
+		if arrows_list.count((startartsquare[1], startartsquare[0], squarex, squarey))==2:
+			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
+			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
+		draw_board(list)
+		if [startartsquare[1], startartsquare[0]] == [squarex, squarey]:
+			if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
+				if (squarex+squarey)%2==1: # TODO Premoves
+					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
+				else:
+					d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
+				globals()["bglist"][squarey][squarex]=1
+			elif globals()["bglist"][squarey][squarex]==1:
+				if (squarex+squarey)%2==1:
+					d.draw.rect(window, dark, (squarex*100, squarey*100, 100, 100))
+				else:
+					d.draw.rect(window, light, (squarex*100, squarey*100, 100, 100))
+				globals()["bglist"][squarey][squarex]=0
+			if list[squarey][squarex]!=0:
+				window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
 	if [artsquarey, artsquarex] != [squarey, squarex]:
 		if uncolored == False:
 			if globals()["bglist"][artsquarey][artsquarex]==0: #TODO draw arrows
@@ -438,27 +487,11 @@ def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice draw arr
 				window.blit(globals()[list[artsquarey][artsquarex]], (100*artsquarex+globals()[list[artsquarey][artsquarex]+"xy"][0],100*artsquarey+globals()[list[artsquarey][artsquarex]+"xy"][1]))
 			uncolored = True
 			startartsquare = [artsquarey, artsquarex]
-		if (startartsquare[0], startartsquare[1], squarey, squarex) not in arrows_list:
-			if arrows_list!=[]:
-				if arrows_list[-1]==(startartsquare[1], startartsquare[0], artsquarex, artsquarey):
-					arrows_list.pop(-1)
-			arrows_list.append((startartsquare[1], startartsquare[0], squarex, squarey))
+		if arrows_list!=[]:
+			if arrows_list[-1]==(startartsquare[1], startartsquare[0], artsquarex, artsquarey):
+				arrows_list.pop(-1)
+		arrows_list.append((startartsquare[1], startartsquare[0], squarex, squarey))
 		draw_board(list)
-		for tuuuple in arrows_list:
-			"""xdiff = tuuuple[2]-tuuuple[0]
-			ydiff = tuuuple[3]-tuuuple[1]
-			xpixels = 10*(1-cos(atan(ydiff/xdiff)))
-			print("x : "+str(xpixels))
-			ypixels = 10*(1+sin(atan(ydiff/xdiff)))
-			print("y : "+str(ypixels))
-			#if xdiff==0:
-				
-			#elif ydiff==0:
-
-			#else:"""
-			gfxd.filled_polygon(window, ((100*tuuuple[0]+38,100*tuuuple[1]+48),(100*tuuuple[0]+58,100*tuuuple[1]+48),(100*tuuuple[2]+58,100*tuuuple[3]+48),(100*tuuuple[2]+38,100*tuuuple[3]+48)), (0,100,0,150))
-	
-			
 
 def init(FEN_string):
 	"""Initializes with a FEN string or a custom-format list from this file"""
@@ -478,6 +511,7 @@ def init(FEN_string):
 	global isfinished
 	global uncolored
 	global arrows_list
+	global isdropped
 	possibilities = []
 	possibilitieson = False
 	running = True
@@ -493,6 +527,8 @@ def init(FEN_string):
 				running = False
 			
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+				arrows_list = []
+				globals()["bglist"] = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 				draw_board(list)
 				if possibilitieson and [squarey, squarex] in possibilities:
 					if piece == "p" or piece == "P" or list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[0]:
@@ -568,14 +604,16 @@ def init(FEN_string):
 			elif event.type == d.MOUSEMOTION and drawing:
 				draw_arrow(artsquarey, artsquarex, squarey, squarex)
 
-			elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False: 
+			elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False:
+				isdropped = True
 				draw_arrow(artsquarey, artsquarex, squarey, squarex)
+				isdropped = False
 				drawing = False
 
 			artsquarey, artsquarex = squarey, squarex
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
-		clock.tick(100)
+		clock.tick(200)
 	d.quit()
 
 def count_combinations(n):
