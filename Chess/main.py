@@ -1,22 +1,30 @@
-from operator import countOf
 import pygame as d
 import pygame.gfxdraw as gfxd
 from os import path
-from math import floor, pi, radians, sin, cos, atan, sqrt
+from math import floor, sin, atan, sqrt
 import copy
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ?)
-# TODO timed games
+# TODO timed games + rules with it
 # TODO show coordinates on board
+# TODO let user customize squares colors (and what else ?)
+# TODO user choice to show possible squares when piece is clicked or not 
+# TODO (user choice draw arrows to only on possible squares)
+# TODO animate end of game lost king flip on red square, won king on green, particle stars around ; Draw = 360° kings
+# TODO premoves
+# TODO other promotions
+# TODO end chess rules
+# TODO sometimes check if comfortable to play when devving
+# TODO add other colors with right click and alt / ctrl    // custom color
 
 # Global variables declaring list
 clock = d.time.Clock()
 window = d.display.set_mode((800, 800), d.SCALED)
-icon = d.image.load("Assets\Icons\WindowIcon.png") #TODO Grey icon : White wins = White icon,,, Black wins = Black icon
+icon = d.image.load("Assets\Icons\WindowIconGrey.png") 
 white = d.Color(255,255,255)
-light = d.Color(172, 115, 57) # TODO let user customize squares colors (and what else ?)
+light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
 lightblue = d.Color(100, 100, 255)
 darkblue = d.Color(40, 40, 100)
@@ -143,7 +151,7 @@ def blit_on_cursor(piece):
 	window.blit(globals()[piece], coordinates)
 
 def possible_squares(list,piece,squarey,squarex):
-	possible_squares = [] # TODO user choice to show possible squares when piece is clicked or not
+	possible_squares = [] 
 
 	if piece == "P":
 		if list[squarey-1][squarex]==0:
@@ -357,7 +365,7 @@ def ischeck(list, squarey, squarex, squaredefender):
 							ischeck = True
 	return ischeck
 
-def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO handle endgame draws (timed), moves repetition and all promotions
+def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex):
 	global game_positions
 	global isfinished
 	if list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[1]:
@@ -421,13 +429,15 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex): # TODO
 			if list[8][0]%2==0:
 				print("Black wins !")
 				d.display.set_caption('Black\'s game')
+				d.display.set_icon(d.image.load("Assets/Icons/WindowIconBlack.png"))
 				isfinished = True
 			else:
 				print("White wins !")
 				d.display.set_caption('White\'s game')
+				d.display.set_icon(d.image.load("Assets/Icons/WindowIconWhite.png"))
 				isfinished = True
 		else:
-			print("Draw : Stalemate !") # TODO animate end of game lost king flip on red square, won king on green, particle stars around ; Draw = 360° kings
+			print("Draw : Stalemate !")
 			d.display.set_caption('No one\'s game')
 			isfinished = True
 	if list[8][4]>=50:
@@ -443,7 +453,7 @@ def canmove(list, whotoplay):
 					return True
 	return False
 
-def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice draw arrows to only on possible squares
+def draw_arrow(artsquarey, artsquarex, squarey, squarex): 
 	global uncolored
 	global list
 	global arrows_list
@@ -455,8 +465,8 @@ def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice draw arr
 			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
 		draw_board(list)
 		if [startartsquare[1], startartsquare[0]] == [squarex, squarey]:
-			if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows
-				if (squarex+squarey)%2==1: # TODO Premoves
+			if globals()["bglist"][squarey][squarex]==0:
+				if (squarex+squarey)%2==1:
 					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
 				else:
 					d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
@@ -471,8 +481,8 @@ def draw_arrow(artsquarey, artsquarex, squarey, squarex): # user choice draw arr
 				window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
 	if [artsquarey, artsquarex] != [squarey, squarex]:
 		if uncolored == False:
-			if globals()["bglist"][artsquarey][artsquarex]==0: #TODO draw arrows
-				if (artsquarex+artsquarey)%2==1: # TODO Premoves
+			if globals()["bglist"][artsquarey][artsquarex]==0:
+				if (artsquarex+artsquarey)%2==1:
 					d.draw.rect(window, darkblue, (artsquarex*100, artsquarey*100, 100, 100))
 				else:
 					d.draw.rect(window, lightblue, (artsquarex*100, artsquarey*100, 100, 100))
@@ -517,8 +527,8 @@ def init(FEN_string):
 	running = True
 	dragged = False
 	drawing = False
-	while running: # TODO end chess rules
-		for event in d.event.get(): #TODO review ifs order, makes it user-friendly with several clicks at a time (customizable)
+	while running:
+		for event in d.event.get():
 
 			squarey=floor(d.mouse.get_pos()[1]/100)
 			squarex=floor(d.mouse.get_pos()[0]/100)
@@ -576,7 +586,7 @@ def init(FEN_string):
 				dragged = False
 
 
-			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: # TODO add other colors with right click and alt / ctrl    // custom color
+			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: 
 				if dragged:
 					list[startsquarey][startsquarex] = piece
 					possibilities = []
@@ -586,8 +596,8 @@ def init(FEN_string):
 				drawing = True
 				uncolored = False
 				artsquarey, artsquarex = squarey, squarex
-				if globals()["bglist"][squarey][squarex]==0: #TODO draw arrows : objects ? -> in order to be removed
-					if (squarex+squarey)%2==1: # TODO Premoves
+				if globals()["bglist"][squarey][squarex]==0:
+					if (squarex+squarey)%2==1:
 						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
 					else:
 						d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
