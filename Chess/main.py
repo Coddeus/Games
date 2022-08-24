@@ -403,12 +403,12 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex):
 	elif piece == "R" and (list[8][1][0]==1 or list[8][1][1]==1):
 		if list[7][7]==0:
 			list[8][1][0]=0
-		elif list[7][0]==0:
+		if list[7][0]==0:
 			list[8][1][1]=0
 	elif piece == "r" and (list[8][2][0]==1 or list[8][2][1]==1):
 		if list[0][7]==0:
 			list[8][2][0]=0
-		elif list[0][0]==0:
+		if list[0][0]==0:
 			list[8][2][1]=0
 	list[9] = [[startsquarey, startsquarex], [squarey, squarex]]
 	addposition = True
