@@ -19,6 +19,7 @@ import copy
 # TODO sometimes check if comfortable to play when devving
 # TODO add other colors with right click and alt / ctrl    // custom color
 # TODO user choice to rotate board
+# TODO don't double code in ischeck
 
 # Global variables declaring list
 clock = d.time.Clock()
