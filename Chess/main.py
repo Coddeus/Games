@@ -20,6 +20,8 @@ import copy
 # TODO add other colors with right click and alt / ctrl    // custom color
 # TODO user choice to rotate board
 # TODO don't double code in ischeck
+# TODO sound with pieces
+# TODO use try: + except:   instead of   conditions + verify_squares
 
 # Global variables declaring list
 clock = d.time.Clock()
