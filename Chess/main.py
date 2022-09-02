@@ -287,86 +287,53 @@ def ischeck(list, squarey, squarex, squaredefender):
 		if eval(conditions[i]):
 			if list[verify_squares[i][0]][verify_squares[i][1]] == all_pieces[(squaredefender+1)%2][1]:
 				ischeck = True
-
-	if ischeck == False:
-
-		if squaredefender==0:
-			if squarey>=1:
-				if squarex>=1:
-					if list[squarey-1][squarex-1]=="p":
-						ischeck = True
-				if squarex<=6:
-					if list[squarey-1][squarex+1]=="p":
+	if ischeck==False:
+		ways=0
+		squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
+		squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1", "testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
+		for i, j in zip(squareyop, squarexop):
+			testsquarex, testsquarey = squarex, squarey
+			keepon = True
+			while keepon and ischeck==False:
+				testsquarey, testsquarex = eval(i), eval(j)
+				if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0:
+					if list[testsquarey][testsquarex] in all_pieces[squaredefender]:
+						keepon = False
+					elif list[testsquarey][testsquarex] in all_pieces[(squaredefender+1)%2]:
+						keepon = False
+						if ways<=3:
+							if list[testsquarey][testsquarex]==all_pieces[(squaredefender+1)%2][4] or list[testsquarey][testsquarex]==all_pieces[(squaredefender+1)%2][2]:
+								ischeck = True
+						else:
+							if list[testsquarey][testsquarex]==all_pieces[(squaredefender+1)%2][4] or list[testsquarey][testsquarex]==all_pieces[(squaredefender+1)%2][3]:
+								ischeck = True
+				else:
+					keepon = False
+			ways+=1
+		if ischeck == False:
+			squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
+			squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
+			for i, j in zip(squareyop, squarexop):
+				testsquarey, testsquarex = eval(i), eval(j)
+				if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]==all_pieces[(squaredefender+1)%2][5]:
 						ischeck = True
 			if ischeck == False:
-				ways=0
-				squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
-				squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1", "testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
-				for i, j in zip(squareyop, squarexop):
-					testsquarex, testsquarey = squarex, squarey
-					keepon = True
-					while keepon and ischeck==False:
-						testsquarey, testsquarex = eval(i), eval(j)
-						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0:
-							if list[testsquarey][testsquarex] in all_pieces[0]:
-								keepon = False
-							elif list[testsquarey][testsquarex] in all_pieces[1]:
-								keepon = False
-								if ways<=3:
-									if list[testsquarey][testsquarex]=="q" or list[testsquarey][testsquarex]=="b":
-										ischeck = True
-								else:
-									if list[testsquarey][testsquarex]=="q" or list[testsquarey][testsquarex]=="r":
-										ischeck = True
-						else:
-							keepon = False
-					ways+=1
-				if ischeck == False:
-					squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
-					squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
-					for i, j in zip(squareyop, squarexop):
-						testsquarey, testsquarex = eval(i), eval(j)
-						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]=="k":
-							ischeck = True
-
-		elif squaredefender==1:
-			if squarey<=6:
-				if squarex>=1:
-					if list[squarey+1][squarex-1]=="P":
-						ischeck = True
-				if squarex<=6:
-					if list[squarey+1][squarex+1]=="P":
-						ischeck = True
-			if ischeck == False:
-				ways=0
-				squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1", "testsquarey+1", "testsquarey", "testsquarey", "testsquarey-1"]
-				squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1", "testsquarex", "testsquarex-1", "testsquarex+1", "testsquarex"]
-				for i, j in zip(squareyop, squarexop):
-					testsquarex, testsquarey = squarex, squarey
-					keepon = True
-					while keepon and ischeck==False:
-						testsquarey, testsquarex = eval(i), eval(j)
-						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0:
-							if list[testsquarey][testsquarex] in all_pieces[1]:
-								keepon = False
-							elif list[testsquarey][testsquarex] in all_pieces[0]:
-								keepon = False
-								if ways<=3:
-									if list[testsquarey][testsquarex]=="Q" or list[testsquarey][testsquarex]=="B":
-										ischeck = True
-								else:
-									if list[testsquarey][testsquarex]=="Q" or list[testsquarey][testsquarex]=="R":
-										ischeck = True
-						else:
-							keepon = False
-					ways+=1
-				if ischeck == False:
-					squareyop = ["squarey+1", "squarey+1", "squarey-1", "squarey-1", "squarey+1", "squarey", "squarey", "squarey-1"]
-					squarexop = ["squarex+1", "squarex-1", "squarex+1", "squarex-1", "squarex", "squarex-1", "squarex+1", "squarex"]
-					for i, j in zip(squareyop, squarexop):
-						testsquarey, testsquarex = eval(i), eval(j)
-						if testsquarex<=7 and testsquarex>=0 and testsquarey<=7 and testsquarey>=0 and list[testsquarey][testsquarex]=="K":
-							ischeck = True
+				if squaredefender==0:
+					if squarey>=1:
+						if squarex>=1:
+							if list[squarey-1][squarex-1]=="p":
+								ischeck = True
+						if squarex<=6:
+							if list[squarey-1][squarex+1]=="p":
+								ischeck = True
+				elif squaredefender==1:
+					if squarey<=6:
+						if squarex>=1:
+							if list[squarey+1][squarex-1]=="P":
+								ischeck = True
+						if squarex<=6:
+							if list[squarey+1][squarex+1]=="P":
+								ischeck = True
 	return ischeck
 
 def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex):
