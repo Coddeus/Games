@@ -6,7 +6,7 @@ import copy
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
-# TODO add different resolutions (1 big and others are smallered img resolutions ?)
+# TODO add different resolutions (1 big and others are smallered img resolutions ? Or vector image ?)
 # TODO timed games + rules with it
 # TODO show coordinates on board
 # TODO let user customize squares colors (and what else ?)
@@ -19,9 +19,7 @@ import copy
 # TODO sometimes check if comfortable to play when devving
 # TODO add other colors with right click and alt / ctrl    // custom color
 # TODO user choice to rotate board
-# TODO don't double code in ischeck
 # TODO sound with pieces
-# TODO use try: + except:   instead of   conditions + verify_squares
 
 # Global variables declaring list
 clock = d.time.Clock()
@@ -55,6 +53,8 @@ uncolored = False
 arrows_list = []
 startartsquare = []
 isdropped = False
+display = "game"
+running = False
 
 def list_to_str(chess_board):
 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
@@ -475,8 +475,14 @@ def draw_arrow(artsquarey, artsquarex, squarey, squarex):
 		draw_board(list)
 
 def init(FEN_string):
-	"""Initializes with a FEN string or a custom-format list from this file"""
+	"""Initializes board with a FEN string or a custom-format list from this file"""
 	global list
+	global isfinished
+	global uncolored
+	global arrows_list
+	global isdropped
+	global display
+	global running
 	if "/" in FEN_string:
 		list = str_to_list(FEN_string)
 
@@ -488,19 +494,12 @@ def init(FEN_string):
 	draw_board(list)
 	d.display.update()
 	buttons = d.mouse.get_pressed(5)
-
-	global isfinished
-	global uncolored
-	global arrows_list
-	global isdropped
 	possibilities = []
 	possibilitieson = False
-	running = True
 	dragged = False
 	drawing = False
-	while running:
+	while running and display == "local":
 		for event in d.event.get():
-
 			squarey=floor(d.mouse.get_pos()[1]/100)
 			squarex=floor(d.mouse.get_pos()[0]/100)
 
@@ -541,7 +540,7 @@ def init(FEN_string):
 			elif event.type == d.MOUSEMOTION and dragged:
 				draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				blit_on_cursor(piece)
- 
+
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
 				if [squarey, squarex] in possibilities:
 					if piece == "p" or piece == "P" or list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[0]:
@@ -595,7 +594,6 @@ def init(FEN_string):
 			buttons = d.mouse.get_pressed(5)
 			d.display.update()
 		clock.tick(200)
-	d.quit()
 
 def count_combinations(n):
 	"""Counts the number of possible move combinations from the beginning of the game after n total moves"""
@@ -605,5 +603,20 @@ def count_positions(n):
 	"""Counts the number of possible board positions after n moves"""
 	pass
 
-# Initialize with start position
-init(start_position)
+def launch():
+	global display
+	global running
+	running = True
+	display = "local"
+	while running:
+		if display == "local":
+			# Initialize with start position
+			init(start_position)
+		elif display == "menu":
+			pass
+		elif display == "settings":
+			pass
+		elif display == "settings":
+			pass
+
+launch()
