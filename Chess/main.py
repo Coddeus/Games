@@ -20,7 +20,7 @@ import copy
 # TODO add other colors with right click and alt / ctrl    // custom color
 # TODO user choice to rotate board
 # TODO sound with pieces
-# TODO make it NOFRAME
+# TODO make it NOFRAME -> make custom frame
 # TODO user can choose fullscreen
 
 # Global variables declaring
@@ -29,7 +29,10 @@ import copy
 clock = d.time.Clock()
 window = d.display.set_mode((1920, 1020), d.RESIZABLE)
 icon = d.image.load("Assets\Icons\WindowIconGrey.png") 
-white = d.Color(255,255,255)
+settingsicon = d.image.load("Assets\Icons\Settings.png")
+settingsicon = d.transform.scale(settingsicon,(51,51))
+grey = d.Color(29, 38, 46)
+lightergrey = d.Color(43, 57, 69)
 light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
 lightblue = d.Color(100, 100, 255)
@@ -97,7 +100,7 @@ def str_to_list(FEN_string):
 
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
 	global arrows_list
-	window.fill(white)
+	window.fill(grey)
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -124,6 +127,7 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 					d.draw.rect(window, darkblue, (x*100+560, y*100+140, 100, 100))
 				else:
 					d.draw.rect(window, lightblue, (x*100+560, y*100+140, 100, 100))
+	window.blit(settingsicon,(1360,140))
 	for y in range(8):
 		for x in range(8):
 			if list[y][x]!=0:
@@ -478,7 +482,7 @@ def initboard(FEN_string):
 	# Init
 	window = d.display.set_mode((1920, 1020), d.RESIZABLE)
 	d.init()
-	window.fill(white)
+	window.fill(grey)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
 	draw_board(list)
