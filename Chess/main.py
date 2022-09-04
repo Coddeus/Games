@@ -6,7 +6,7 @@ import copy
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
-# TODO add different resolutions (1 big and others are smallered img resolutions ? Or vector image ?)
+# TODO add different resolutions (1 big and others are smallered img resolutions ? Or vector image ?) (permanent ?)
 # TODO timed games + rules with it
 # TODO show coordinates on board
 # TODO let user customize squares colors (and what else ?)
@@ -20,10 +20,14 @@ import copy
 # TODO add other colors with right click and alt / ctrl    // custom color
 # TODO user choice to rotate board
 # TODO sound with pieces
+# TODO make it NOFRAME
+# TODO user can choose fullscreen
 
-# Global variables declaring list
+# Global variables declaring
+
+# Init variables
 clock = d.time.Clock()
-window = d.display.set_mode((800, 800), d.SCALED)
+window = d.display.set_mode((1920, 1020), d.RESIZABLE)
 icon = d.image.load("Assets\Icons\WindowIconGrey.png") 
 white = d.Color(255,255,255)
 light = d.Color(172, 115, 57)
@@ -53,12 +57,11 @@ uncolored = False
 arrows_list = []
 startartsquare = []
 isdropped = False
+
+# Launch variables
 display = "game"
 running = False
 
-def list_to_str(chess_board):
-	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
-	pass
 
 def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
@@ -94,38 +97,39 @@ def str_to_list(FEN_string):
 
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
 	global arrows_list
+	window.fill(white)
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
-				d.draw.rect(window, dark, (x*100, y*100, 100, 100))
+				d.draw.rect(window, dark, (x*100+560, y*100+140, 100, 100))
 			else:
-				d.draw.rect(window, light, (x*100, y*100, 100, 100))
+				d.draw.rect(window, light, (x*100+560, y*100+140, 100, 100))
 	kingsquareyx = king_coor(list) if not kingmoving else [startsquarey,startsquarex]
 	if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
-		d.draw.rect(window, red, (kingsquareyx[1]*100, kingsquareyx[0]*100, 100, 100))
+		d.draw.rect(window, red, (kingsquareyx[1]*100+560, kingsquareyx[0]*100+140, 100, 100))
 		if (kingsquareyx[1]+kingsquareyx[0])%2==1:
-			d.draw.circle(window, dark, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
+			d.draw.circle(window, dark, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
 		else:
-			d.draw.circle(window, light, (kingsquareyx[1]*100+50, kingsquareyx[0]*100+50), 50)
+			d.draw.circle(window, light, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
 	if list[8][0]>=1:
 		for c in list[9]:
 			if (c[0]+c[1])%2==1:
-				d.draw.rect(window, darkorange, (c[1]*100, c[0]*100, 100, 100))
+				d.draw.rect(window, darkorange, (c[1]*100+560, c[0]*100+140, 100, 100))
 			else:
-				d.draw.rect(window, lightorange, (c[1]*100, c[0]*100, 100, 100))
+				d.draw.rect(window, lightorange, (c[1]*100+560, c[0]*100+140, 100, 100))
 	for y in range(8):
 		for x in range(8):
 			if globals()["bglist"][y][x]==1:
 				if (x+y)%2==1:
-					d.draw.rect(window, darkblue, (x*100, y*100, 100, 100))
+					d.draw.rect(window, darkblue, (x*100+560, y*100+140, 100, 100))
 				else:
-					d.draw.rect(window, lightblue, (x*100, y*100, 100, 100))
+					d.draw.rect(window, lightblue, (x*100+560, y*100+140, 100, 100))
 	for y in range(8):
 		for x in range(8):
 			if list[y][x]!=0:
-				window.blit(globals()[list[y][x]], (100*x+globals()[list[y][x]+"xy"][0],100*y+globals()[list[y][x]+"xy"][1]))
+				window.blit(globals()[list[y][x]], (100*x+560+globals()[list[y][x]+"xy"][0],100*y+140+globals()[list[y][x]+"xy"][1]))
 	for p in possibilities:
-		gfxd.filled_circle(window, 100*p[1]+48,100*p[0]+48, 15, (50,50,50,100))
+		gfxd.filled_circle(window, 100*p[1]+608,100*p[0]+188, 15, (50,50,50,100))
 	if arrows_list!=[]:
 		for tuuuple in arrows_list:
 			xdiff = tuuuple[2]-tuuuple[0]
@@ -133,22 +137,22 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 			if not (xdiff==0 and ydiff==0):
 				if xdiff==0:
 					if ydiff>0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+38,100*tuuuple[1]+88),(100*tuuuple[0]+58,100*tuuuple[1]+88),(100*tuuuple[2]+58,100*tuuuple[3]+8),(100*tuuuple[2]+68,100*tuuuple[3]+8),(100*tuuuple[2]+48,100*tuuuple[3]+38),(100*tuuuple[2]+28,100*tuuuple[3]+8),(100*tuuuple[2]+38,100*tuuuple[3]+8)), (0,100,0,150))
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+598,100*tuuuple[1]+228),(100*tuuuple[0]+618,100*tuuuple[1]+228),(100*tuuuple[2]+618,100*tuuuple[3]+148),(100*tuuuple[2]+628,100*tuuuple[3]+148),(100*tuuuple[2]+608,100*tuuuple[3]+178),(100*tuuuple[2]+588,100*tuuuple[3]+148),(100*tuuuple[2]+598,100*tuuuple[3]+148)), (0,100,0,150))
 					else:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+38,100*tuuuple[1]+8),(100*tuuuple[0]+58,100*tuuuple[1]+8),(100*tuuuple[2]+58,100*tuuuple[3]+88),(100*tuuuple[2]+68,100*tuuuple[3]+88),(100*tuuuple[2]+48,100*tuuuple[3]+58),(100*tuuuple[2]+28,100*tuuuple[3]+88),(100*tuuuple[2]+38,100*tuuuple[3]+88)), (0,100,0,150))
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+598,100*tuuuple[1]+148),(100*tuuuple[0]+618,100*tuuuple[1]+148),(100*tuuuple[2]+618,100*tuuuple[3]+228),(100*tuuuple[2]+628,100*tuuuple[3]+228),(100*tuuuple[2]+608,100*tuuuple[3]+198),(100*tuuuple[2]+588,100*tuuuple[3]+228),(100*tuuuple[2]+598,100*tuuuple[3]+228)), (0,100,0,150))
 				elif ydiff==0:
 					if xdiff>0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+88,100*tuuuple[1]+58),(100*tuuuple[0]+88,100*tuuuple[1]+38),(100*tuuuple[2]+8,100*tuuuple[3]+38),(100*tuuuple[2]+8,100*tuuuple[3]+28),(100*tuuuple[2]+38,100*tuuuple[3]+48),(100*tuuuple[2]+8,100*tuuuple[3]+68),(100*tuuuple[2]+8,100*tuuuple[3]+58)), (0,100,0,150))
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+648,100*tuuuple[1]+198),(100*tuuuple[0]+648,100*tuuuple[1]+178),(100*tuuuple[2]+568,100*tuuuple[3]+178),(100*tuuuple[2]+568,100*tuuuple[3]+168),(100*tuuuple[2]+598,100*tuuuple[3]+188),(100*tuuuple[2]+568,100*tuuuple[3]+208),(100*tuuuple[2]+568,100*tuuuple[3]+198)), (0,100,0,150))
 					else:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+8,100*tuuuple[1]+58),(100*tuuuple[0]+8,100*tuuuple[1]+38),(100*tuuuple[2]+88,100*tuuuple[3]+38),(100*tuuuple[2]+88,100*tuuuple[3]+68),(100*tuuuple[2]+58,100*tuuuple[3]+48),(100*tuuuple[2]+88,100*tuuuple[3]+28),(100*tuuuple[2]+88,100*tuuuple[3]+58)), (0,100,0,150))
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+568,100*tuuuple[1]+198),(100*tuuuple[0]+568,100*tuuuple[1]+178),(100*tuuuple[2]+648,100*tuuuple[3]+178),(100*tuuuple[2]+648,100*tuuuple[3]+208),(100*tuuuple[2]+618,100*tuuuple[3]+188),(100*tuuuple[2]+648,100*tuuuple[3]+168),(100*tuuuple[2]+648,100*tuuuple[3]+198)), (0,100,0,150))
 				else:
 					sine = sin(atan(ydiff/xdiff))
 					ypixels = 10*sine
 					xpixels = 10*sqrt(1-sine**2)
 					if xdiff>0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+48+ypixels+4*xpixels,100*tuuuple[1]+48-xpixels+4*ypixels),(100*tuuuple[0]+48-ypixels+4*xpixels,100*tuuuple[1]+48+xpixels+4*ypixels),(100*tuuuple[2]+48-ypixels-4*xpixels,100*tuuuple[3]+48+xpixels-4*ypixels),(100*tuuuple[2]+48-2*ypixels-4*xpixels,100*tuuuple[3]+48+2*xpixels-4*ypixels),(100*tuuuple[2]+48-xpixels,100*tuuuple[3]+48-ypixels),(100*tuuuple[2]+48+2*ypixels-4*xpixels,100*tuuuple[3]+48-2*xpixels-4*ypixels),(100*tuuuple[2]+48+ypixels-4*xpixels,100*tuuuple[3]+48-xpixels-4*ypixels)), (0,100,0,150))
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels+4*xpixels,100*tuuuple[1]+188-xpixels+4*ypixels),(100*tuuuple[0]+608-ypixels+4*xpixels,100*tuuuple[1]+188+xpixels+4*ypixels),(100*tuuuple[2]+608-ypixels-4*xpixels,100*tuuuple[3]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-2*ypixels-4*xpixels,100*tuuuple[3]+188+2*xpixels-4*ypixels),(100*tuuuple[2]+608-xpixels,100*tuuuple[3]+188-ypixels),(100*tuuuple[2]+608+2*ypixels-4*xpixels,100*tuuuple[3]+188-2*xpixels-4*ypixels),(100*tuuuple[2]+608+ypixels-4*xpixels,100*tuuuple[3]+188-xpixels-4*ypixels)), (0,100,0,150))
 					elif xdiff<0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+48+ypixels-4*xpixels,100*tuuuple[1]+48-xpixels-4*ypixels),(100*tuuuple[0]+48-ypixels-4*xpixels,100*tuuuple[1]+48+xpixels-4*ypixels),(100*tuuuple[2]+48-ypixels+4*xpixels,100*tuuuple[3]+48+xpixels+4*ypixels),(100*tuuuple[2]+48+2*ypixels+4*xpixels,100*tuuuple[3]+48-2*xpixels+4*ypixels),(100*tuuuple[2]+48+xpixels,100*tuuuple[3]+48+ypixels),(100*tuuuple[2]+48-2*ypixels+4*xpixels,100*tuuuple[3]+48+2*xpixels+4*ypixels),(100*tuuuple[2]+48+ypixels+4*xpixels,100*tuuuple[3]+48-xpixels+4*ypixels)), (0,100,0,150))
+						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels-4*xpixels,100*tuuuple[1]+188-xpixels-4*ypixels),(100*tuuuple[0]+608-ypixels-4*xpixels,100*tuuuple[1]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-ypixels+4*xpixels,100*tuuuple[3]+188+xpixels+4*ypixels),(100*tuuuple[2]+608+2*ypixels+4*xpixels,100*tuuuple[3]+188-2*xpixels+4*ypixels),(100*tuuuple[2]+608+xpixels,100*tuuuple[3]+188+ypixels),(100*tuuuple[2]+608-2*ypixels+4*xpixels,100*tuuuple[3]+188+2*xpixels+4*ypixels),(100*tuuuple[2]+608+ypixels+4*xpixels,100*tuuuple[3]+188-xpixels+4*ypixels)), (0,100,0,150))
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
@@ -438,43 +442,26 @@ def draw_arrow(artsquarey, artsquarex, squarey, squarex):
 		if [startartsquare[1], startartsquare[0]] == [squarex, squarey]:
 			if globals()["bglist"][squarey][squarex]==0:
 				if (squarex+squarey)%2==1:
-					d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
+					d.draw.rect(window, darkblue, (squarex*100+560, squarey*100+140, 100, 100))
 				else:
-					d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
+					d.draw.rect(window, lightblue, (squarex*100+560, squarey*100+140, 100, 100))
 				globals()["bglist"][squarey][squarex]=1
 			elif globals()["bglist"][squarey][squarex]==1:
 				if (squarex+squarey)%2==1:
-					d.draw.rect(window, dark, (squarex*100, squarey*100, 100, 100))
+					d.draw.rect(window, dark, (squarex*100+560, squarey*100+140, 100, 100))
 				else:
-					d.draw.rect(window, light, (squarex*100, squarey*100, 100, 100))
+					d.draw.rect(window, light, (squarex*100+560, squarey*100+140, 100, 100))
 				globals()["bglist"][squarey][squarex]=0
 			if list[squarey][squarex]!=0:
-				window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
+				window.blit(globals()[list[squarey][squarex]], (100*squarex+560+globals()[list[squarey][squarex]+"xy"][0],100*squarey+140+globals()[list[squarey][squarex]+"xy"][1]))
 	if [artsquarey, artsquarex] != [squarey, squarex]:
-		if uncolored == False:
-			if globals()["bglist"][artsquarey][artsquarex]==0:
-				if (artsquarex+artsquarey)%2==1:
-					d.draw.rect(window, darkblue, (artsquarex*100, artsquarey*100, 100, 100))
-				else:
-					d.draw.rect(window, lightblue, (artsquarex*100, artsquarey*100, 100, 100))
-				globals()["bglist"][artsquarey][artsquarex]=1
-			elif globals()["bglist"][artsquarey][artsquarex]==1:
-				if (artsquarex+artsquarey)%2==1:
-					d.draw.rect(window, dark, (artsquarex*100, artsquarey*100, 100, 100))
-				else:
-					d.draw.rect(window, light, (artsquarex*100, artsquarey*100, 100, 100))
-				globals()["bglist"][artsquarey][artsquarex]=0
-			if list[artsquarey][artsquarex]!=0:
-				window.blit(globals()[list[artsquarey][artsquarex]], (100*artsquarex+globals()[list[artsquarey][artsquarex]+"xy"][0],100*artsquarey+globals()[list[artsquarey][artsquarex]+"xy"][1]))
-			uncolored = True
-			startartsquare = [artsquarey, artsquarex]
 		if arrows_list!=[]:
 			if arrows_list[-1]==(startartsquare[1], startartsquare[0], artsquarex, artsquarey):
 				arrows_list.pop(-1)
 		arrows_list.append((startartsquare[1], startartsquare[0], squarex, squarey))
 		draw_board(list)
 
-def init(FEN_string):
+def initboard(FEN_string):
 	"""Initializes board with a FEN string or a custom-format list from this file"""
 	global list
 	global isfinished
@@ -483,10 +470,13 @@ def init(FEN_string):
 	global isdropped
 	global display
 	global running
+	global window
+	global startartsquare
 	if "/" in FEN_string:
 		list = str_to_list(FEN_string)
 
 	# Init
+	window = d.display.set_mode((1920, 1020), d.RESIZABLE)
 	d.init()
 	window.fill(white)
 	d.display.set_icon(icon)
@@ -500,13 +490,16 @@ def init(FEN_string):
 	drawing = False
 	while running and display == "local":
 		for event in d.event.get():
-			squarey=floor(d.mouse.get_pos()[1]/100)
-			squarex=floor(d.mouse.get_pos()[0]/100)
+			squarey=floor((d.mouse.get_pos()[1]-140)/100)
+			squarex=floor((d.mouse.get_pos()[0]-560)/100)
 
 			if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE) or (event.type == d.QUIT): # You can press Esc to quit app
-				running = False
+					running = False
 			
-			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+			if event.type == d.VIDEORESIZE:
+				draw_board(list)
+
+			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
 				globals()["bglist"] = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 				draw_board(list)
@@ -562,24 +555,11 @@ def init(FEN_string):
 					possibilities = []
 					possibilitieson = False
 					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
+				startartsquare = [squarey, squarex]
 				dragged = False
 				drawing = True
 				uncolored = False
 				artsquarey, artsquarex = squarey, squarex
-				if globals()["bglist"][squarey][squarex]==0:
-					if (squarex+squarey)%2==1:
-						d.draw.rect(window, darkblue, (squarex*100, squarey*100, 100, 100))
-					else:
-						d.draw.rect(window, lightblue, (squarex*100, squarey*100, 100, 100))
-					globals()["bglist"][squarey][squarex]=1
-				elif globals()["bglist"][squarey][squarex]==1:
-					if (squarex+squarey)%2==1:
-						d.draw.rect(window, dark, (squarex*100, squarey*100, 100, 100))
-					else:
-						d.draw.rect(window, light, (squarex*100, squarey*100, 100, 100))
-					globals()["bglist"][squarey][squarex]=0
-				if list[squarey][squarex]!=0:
-					window.blit(globals()[list[squarey][squarex]], (100*squarex+globals()[list[squarey][squarex]+"xy"][0],100*squarey+globals()[list[squarey][squarex]+"xy"][1]))
 			
 			elif event.type == d.MOUSEMOTION and drawing:
 				draw_arrow(artsquarey, artsquarex, squarey, squarex)
@@ -595,6 +575,14 @@ def init(FEN_string):
 			d.display.update()
 		clock.tick(200)
 
+
+def initmenu():
+	global window
+
+def list_to_str(chess_board):
+	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
+	pass
+
 def count_combinations(n):
 	"""Counts the number of possible move combinations from the beginning of the game after n total moves"""
 	pass
@@ -603,15 +591,17 @@ def count_positions(n):
 	"""Counts the number of possible board positions after n moves"""
 	pass
 
+
+
 def launch():
 	global display
 	global running
 	running = True
 	display = "local"
+	chess_position = start_position
 	while running:
 		if display == "local":
-			# Initialize with start position
-			init(start_position)
+			initboard(chess_position)
 		elif display == "menu":
 			pass
 		elif display == "settings":
