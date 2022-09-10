@@ -22,16 +22,40 @@ import copy
 # TODO sound with pieces
 # TODO make it NOFRAME -> make custom frame
 # TODO user can choose fullscreen
+# TODO call drawboard once
+
+
+# def list_to_str(chess_board):
+# 	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
+# 	pass
+
+# def count_combinations(n):
+# 	"""Counts the number of possible move combinations from the beginning of the game after n total moves"""
+# 	pass
+
+# def count_positions(n):
+# 	"""Counts the number of possible board positions after n moves"""
+# 	pass
+
+d.init()
+maxwidth = 15360
+maxheight = 8640
+downscale = 8
+scaledwidth, scaledheight = maxwidth/downscale, maxheight/downscale
+window = d.display.set_mode((scaledwidth, scaledheight), d.RESIZABLE, d.NOFRAME)
+grey = d.Color(29, 38, 46)
+window.fill(grey)
 
 # Global variables declaring
 
-# Init variables
 clock = d.time.Clock()
-window = d.display.set_mode((1920, 1020), d.RESIZABLE)
-icon = d.image.load("Assets\Icons\WindowIconGrey.png") 
-settingsicon = d.image.load("Assets\Icons\Settings.png")
+
+icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
+settingsicon = d.image.load("Assets\Graphics\Settings.png")
 settingsicon = d.transform.scale(settingsicon,(51,51))
-grey = d.Color(29, 38, 46)
+quitwidth = 104/downscale
+quiticon = d.image.load("Assets\Graphics\quit.png")
+quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
 lightergrey = d.Color(43, 57, 69)
 light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
@@ -46,6 +70,7 @@ for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"
 all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
 testsquarex = 0
 testsquarey = 0
+dragged = False
 possible_squares = []
 list = []
 pxy = Pxy = (23,18)
@@ -56,15 +81,21 @@ qxy = Qxy = (15,18)
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 game_positions = []
 isfinished = False
-uncolored = False
+colored = False
 arrows_list = []
 startartsquare = []
 isdropped = False
+buttons = 0
+piece = "A"
+startsquarex = 0
+startsquarey = 0
 
 # Launch variables
 display = "game"
 running = False
 
+
+# Board managing
 
 def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
@@ -98,9 +129,21 @@ def str_to_list(FEN_string):
 	globals()["game_positions"].append(copy.deepcopy([position_list[:8], position_list[8][0]%2, position_list[8][1:4], 1]))
 	return position_list
 
-def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
-	global arrows_list
+def draw_frame():
 	window.fill(grey)
+	global running
+	if (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65):
+		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
+		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+			running = False
+	else:
+		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
+	window.blit(settingsicon,(1360,140))
+	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+
+def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
+	global dragged
+	global arrows_list
 	for y in range(8):
 		for x in range(8):
 			if (x+y)%2==1:
@@ -110,10 +153,11 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 	kingsquareyx = king_coor(list) if not kingmoving else [startsquarey,startsquarex]
 	if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
 		d.draw.rect(window, red, (kingsquareyx[1]*100+560, kingsquareyx[0]*100+140, 100, 100))
-		if (kingsquareyx[1]+kingsquareyx[0])%2==1:
-			d.draw.circle(window, dark, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
-		else:
-			d.draw.circle(window, light, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
+		if not isfinished:
+			if (kingsquareyx[1]+kingsquareyx[0])%2==1:
+				d.draw.circle(window, dark, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
+			else:
+				d.draw.circle(window, light, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
 	if list[8][0]>=1:
 		for c in list[9]:
 			if (c[0]+c[1])%2==1:
@@ -127,7 +171,6 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 					d.draw.rect(window, darkblue, (x*100+560, y*100+140, 100, 100))
 				else:
 					d.draw.rect(window, lightblue, (x*100+560, y*100+140, 100, 100))
-	window.blit(settingsicon,(1360,140))
 	for y in range(8):
 		for x in range(8):
 			if list[y][x]!=0:
@@ -157,10 +200,50 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels+4*xpixels,100*tuuuple[1]+188-xpixels+4*ypixels),(100*tuuuple[0]+608-ypixels+4*xpixels,100*tuuuple[1]+188+xpixels+4*ypixels),(100*tuuuple[2]+608-ypixels-4*xpixels,100*tuuuple[3]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-2*ypixels-4*xpixels,100*tuuuple[3]+188+2*xpixels-4*ypixels),(100*tuuuple[2]+608-xpixels,100*tuuuple[3]+188-ypixels),(100*tuuuple[2]+608+2*ypixels-4*xpixels,100*tuuuple[3]+188-2*xpixels-4*ypixels),(100*tuuuple[2]+608+ypixels-4*xpixels,100*tuuuple[3]+188-xpixels-4*ypixels)), (0,100,0,150))
 					elif xdiff<0:
 						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels-4*xpixels,100*tuuuple[1]+188-xpixels-4*ypixels),(100*tuuuple[0]+608-ypixels-4*xpixels,100*tuuuple[1]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-ypixels+4*xpixels,100*tuuuple[3]+188+xpixels+4*ypixels),(100*tuuuple[2]+608+2*ypixels+4*xpixels,100*tuuuple[3]+188-2*xpixels+4*ypixels),(100*tuuuple[2]+608+xpixels,100*tuuuple[3]+188+ypixels),(100*tuuuple[2]+608-2*ypixels+4*xpixels,100*tuuuple[3]+188+2*xpixels+4*ypixels),(100*tuuuple[2]+608+ypixels+4*xpixels,100*tuuuple[3]+188-xpixels+4*ypixels)), (0,100,0,150))
+	if dragged:
+		blit_on_cursor(piece)
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
 	window.blit(globals()[piece], coordinates)
+
+def bgcolors(squarex, squarey):
+	if globals()["bglist"][squarey][squarex]==0:
+		if (squarex+squarey)%2==1:
+			d.draw.rect(window, darkblue, (squarex*100+560, squarey*100+140, 100, 100))
+		else:
+			d.draw.rect(window, lightblue, (squarex*100+560, squarey*100+140, 100, 100))
+		globals()["bglist"][squarey][squarex]=1
+	elif globals()["bglist"][squarey][squarex]==1:
+		if (squarex+squarey)%2==1:
+			d.draw.rect(window, dark, (squarex*100+560, squarey*100+140, 100, 100))
+		else:
+			d.draw.rect(window, light, (squarex*100+560, squarey*100+140, 100, 100))
+		globals()["bglist"][squarey][squarex]=0
+
+def draw_arrow(artsquarey, artsquarex, squarey, squarex): 
+	global colored
+	global list
+	global arrows_list
+	global startartsquare
+	global isdropped
+	if isdropped and arrows_list!=[]:
+		if arrows_list.count((startartsquare[1], startartsquare[0], squarex, squarey))>=2:
+			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
+			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
+		draw_board(list)
+		if [startartsquare[1], startartsquare[0]] == [squarex, squarey]:
+			if list[squarey][squarex]!=0:
+				window.blit(globals()[list[squarey][squarex]], (100*squarex+560+globals()[list[squarey][squarex]+"xy"][0],100*squarey+140+globals()[list[squarey][squarex]+"xy"][1]))
+	if [artsquarey, artsquarex] != [squarey, squarex]:
+		if not colored:
+			bgcolors(artsquarex, artsquarey)
+			colored = True
+		if arrows_list!=[]:
+			if arrows_list[-1]==(startartsquare[1], startartsquare[0], artsquarex, artsquarey):
+				arrows_list.pop(-1)
+		arrows_list.append((startartsquare[1], startartsquare[0], squarex, squarey))
+		draw_board(list)
 
 def possible_squares(list,piece,squarey,squarex):
 	possible_squares = [] 
@@ -408,12 +491,12 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex):
 			if list[8][0]%2==0:
 				print("Black wins !")
 				d.display.set_caption('Black\'s game')
-				d.display.set_icon(d.image.load("Assets/Icons/WindowIconBlack.png"))
+				d.display.set_icon(d.image.load("Assets/Graphics/WindowIconBlack.png"))
 				isfinished = True
 			else:
 				print("White wins !")
 				d.display.set_caption('White\'s game')
-				d.display.set_icon(d.image.load("Assets/Icons/WindowIconWhite.png"))
+				d.display.set_icon(d.image.load("Assets/Graphics/WindowIconWhite.png"))
 				isfinished = True
 		else:
 			print("Draw : Stalemate !")
@@ -432,57 +515,30 @@ def canmove(list, whotoplay):
 					return True
 	return False
 
-def draw_arrow(artsquarey, artsquarex, squarey, squarex): 
-	global uncolored
-	global list
-	global arrows_list
-	global startartsquare
-	global isdropped
-	if isdropped and arrows_list!=[]:
-		if arrows_list.count((startartsquare[1], startartsquare[0], squarex, squarey))==2:
-			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
-			arrows_list.remove((startartsquare[1], startartsquare[0], squarex, squarey))
-		draw_board(list)
-		if [startartsquare[1], startartsquare[0]] == [squarex, squarey]:
-			if globals()["bglist"][squarey][squarex]==0:
-				if (squarex+squarey)%2==1:
-					d.draw.rect(window, darkblue, (squarex*100+560, squarey*100+140, 100, 100))
-				else:
-					d.draw.rect(window, lightblue, (squarex*100+560, squarey*100+140, 100, 100))
-				globals()["bglist"][squarey][squarex]=1
-			elif globals()["bglist"][squarey][squarex]==1:
-				if (squarex+squarey)%2==1:
-					d.draw.rect(window, dark, (squarex*100+560, squarey*100+140, 100, 100))
-				else:
-					d.draw.rect(window, light, (squarex*100+560, squarey*100+140, 100, 100))
-				globals()["bglist"][squarey][squarex]=0
-			if list[squarey][squarex]!=0:
-				window.blit(globals()[list[squarey][squarex]], (100*squarex+560+globals()[list[squarey][squarex]+"xy"][0],100*squarey+140+globals()[list[squarey][squarex]+"xy"][1]))
-	if [artsquarey, artsquarex] != [squarey, squarex]:
-		if arrows_list!=[]:
-			if arrows_list[-1]==(startartsquare[1], startartsquare[0], artsquarex, artsquarey):
-				arrows_list.pop(-1)
-		arrows_list.append((startartsquare[1], startartsquare[0], squarex, squarey))
-		draw_board(list)
+
+# Diplays 
 
 def initboard(FEN_string):
 	"""Initializes board with a FEN string or a custom-format list from this file"""
 	global list
 	global isfinished
-	global uncolored
+	global dragged
+	global colored
 	global arrows_list
 	global isdropped
 	global display
 	global running
 	global window
 	global startartsquare
+	global buttons
+	global piece
+	global startsquarex
+	global startsquarey
 	if "/" in FEN_string:
 		list = str_to_list(FEN_string)
 
-	# Init
-	window = d.display.set_mode((1920, 1020), d.RESIZABLE)
-	d.init()
-	window.fill(grey)
+	# Init (in launch() ?)
+	window = d.display.set_mode((scaledwidth, scaledheight), d.RESIZABLE, d.NOFRAME)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
 	draw_board(list)
@@ -499,14 +555,10 @@ def initboard(FEN_string):
 
 			if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE) or (event.type == d.QUIT): # You can press Esc to quit app
 					running = False
-			
-			if event.type == d.VIDEORESIZE:
-				draw_board(list)
 
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
 				globals()["bglist"] = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
-				draw_board(list)
 				if possibilitieson and [squarey, squarex] in possibilities:
 					if piece == "p" or piece == "P" or list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[0]:
 						list[8][4]=0
@@ -516,12 +568,11 @@ def initboard(FEN_string):
 					possibilities = []
 					possibilitieson = False
 					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
-					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				possibilities = []
 				possibilitieson = False
 				dragged = False
 				drawing = False
-				uncolored = False
+				colored = False
 				arrows_list = []
 				if list[squarey][squarex] in all_pieces[list[8][0]%2]:
 					startsquarey, startsquarex = squarey, squarex
@@ -530,12 +581,10 @@ def initboard(FEN_string):
 						possibilities = possible_squares(list,piece,squarey,squarex)
 						possibilitieson = True
 					list[squarey][squarex] = 0
-					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 					blit_on_cursor(piece)
 					dragged = True
 			
 			elif event.type == d.MOUSEMOTION and dragged:
-				draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				blit_on_cursor(piece)
 
 			elif d.mouse.get_pressed(5)[0]==False and dragged:
@@ -549,53 +598,43 @@ def initboard(FEN_string):
 					aftermove(list, piece, squarey, squarex, startsquarey, startsquarex)
 				else:
 					list[startsquarey][startsquarex] = piece
-				draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 				dragged = False
 
+			elif d.mouse.get_pos()[0]>560 and d.mouse.get_pos()[0]<1360 and d.mouse.get_pos()[1]>140 and d.mouse.get_pos()[1]<940:
+				if buttons[2]==False and d.mouse.get_pressed(5)[2]==True: 
+					if dragged:
+						list[startsquarey][startsquarex] = piece
+						possibilities = []
+						possibilitieson = False
+					startartsquare = [squarey, squarex]
+					dragged = False
+					drawing = True
+					colored = False
+					artsquarey, artsquarex = squarey, squarex
+					bgcolors(squarex, squarey)
+				
+				elif event.type == d.MOUSEMOTION and drawing:
+					draw_arrow(artsquarey, artsquarex, squarey, squarex)
 
-			elif buttons[2]==False and d.mouse.get_pressed(5)[2]==True: 
-				if dragged:
-					list[startsquarey][startsquarex] = piece
-					possibilities = []
-					possibilitieson = False
-					draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
-				startartsquare = [squarey, squarex]
-				dragged = False
-				drawing = True
-				uncolored = False
+				elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False:
+					isdropped = True
+					draw_arrow(artsquarey, artsquarex, squarey, squarex)
+					isdropped = False
+					drawing = False
+
 				artsquarey, artsquarex = squarey, squarex
-			
-			elif event.type == d.MOUSEMOTION and drawing:
-				draw_arrow(artsquarey, artsquarex, squarey, squarex)
 
-			elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False:
-				isdropped = True
-				draw_arrow(artsquarey, artsquarex, squarey, squarex)
-				isdropped = False
-				drawing = False
-
-			artsquarey, artsquarex = squarey, squarex
-			buttons = d.mouse.get_pressed(5)
+			draw_frame()
+			draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 			d.display.update()
+			buttons = d.mouse.get_pressed(5)
 		clock.tick(200)
 
-
-def initmenu():
+def initmenu(): # opens when escape on chess game
 	global window
 
-def list_to_str(chess_board):
-	"""Turns the list of lists (the chessboard position) given into a FEN string, useful for chess problems"""
-	pass
 
-def count_combinations(n):
-	"""Counts the number of possible move combinations from the beginning of the game after n total moves"""
-	pass
-
-def count_positions(n):
-	"""Counts the number of possible board positions after n moves"""
-	pass
-
-
+# Launch
 
 def launch():
 	global display
@@ -612,5 +651,6 @@ def launch():
 			pass
 		elif display == "settings":
 			pass
+	d.quit()
 
 launch()
