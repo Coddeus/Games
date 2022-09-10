@@ -42,7 +42,7 @@ maxwidth = 15360
 maxheight = 8640
 downscale = 8
 scaledwidth, scaledheight = maxwidth/downscale, maxheight/downscale
-window = d.display.set_mode((scaledwidth, scaledheight), d.RESIZABLE, d.NOFRAME)
+window = d.display.set_mode((scaledwidth, scaledheight), d.RESIZABLE | d.NOFRAME)
 grey = d.Color(29, 38, 46)
 window.fill(grey)
 
@@ -56,6 +56,8 @@ settingsicon = d.transform.scale(settingsicon,(51,51))
 quitwidth = 104/downscale
 quiticon = d.image.load("Assets\Graphics\quit.png")
 quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
+hideicon = d.image.load("Assets\Graphics\minimize.png")
+hideicon = d.transform.scale(hideicon,(quitwidth, quitwidth/5))
 lightergrey = d.Color(43, 57, 69)
 light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
@@ -130,15 +132,23 @@ def str_to_list(FEN_string):
 	return position_list
 
 def draw_frame():
-	window.fill(grey)
 	global running
+	global window
+	window.fill(grey)
 	if (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65):
 		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
 		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 			running = False
 	else:
 		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
+	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-130 and d.mouse.get_pos()[0]<=scaledwidth-65:
+		d.draw.rect(window, lightergrey, (scaledwidth-130, 0, 65, 33))
+		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+			d.display.iconify()
+	else:
+		d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
 	window.blit(settingsicon,(1360,140))
+	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
 	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
 
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
