@@ -51,7 +51,7 @@ window.fill(grey)
 clock = d.time.Clock()
 
 icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
-settingsicon = d.image.load("Assets\Graphics\Settings.png")
+settingsicon = d.image.load("Assets\Graphics\settings.png")
 settingsicon = d.transform.scale(settingsicon,(51,51))
 quitwidth = 104/downscale
 quiticon = d.image.load("Assets\Graphics\quit.png")
