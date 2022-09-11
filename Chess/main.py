@@ -657,7 +657,7 @@ def initboard(FEN_string):
 				elif event.type == d.MOUSEMOTION and drawing:
 					draw_arrow(artsquarey, artsquarex, squarey, squarex)
 
-				elif buttons[2]==True and d.mouse.get_pressed(5)[2]==False:
+				elif drawing and d.mouse.get_pressed(5)[2]==False:
 					isdropped = True
 					draw_arrow(artsquarey, artsquarex, squarey, squarex)
 					isdropped = False
