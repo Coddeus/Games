@@ -5,7 +5,7 @@ from math import floor, sin, atan, sqrt
 import copy
 import time
 
-# TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
+# TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer (hidden window ?), local app for playing on chess.com or lichess or …
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ? Or vector image ?) (permanent ?)
 # TODO timed games + rules with it
@@ -23,7 +23,8 @@ import time
 # TODO sound with pieces
 # TODO make it NOFRAME -> make custom frame
 # TODO user can choose fullscreen
-# TODO call drawboard once
+# TODO describe when hovered element
+# TODO Ctrl+click to get keyboard shortcut of any element
 
 
 # def list_to_str(chess_board):
@@ -38,27 +39,13 @@ import time
 # 	"""Counts the number of possible board positions after n moves"""
 # 	pass
 
-d.init()
-maxwidth = 15360
-maxheight = 8640
-downscale = 8
-scaledwidth, scaledheight = maxwidth/downscale, maxheight/downscale
-window = d.display.set_mode((scaledwidth, scaledheight), d.RESIZABLE | d.NOFRAME)
+
+
+# VARIABLES
+
+
+# Colors
 grey = d.Color(29, 38, 46)
-window.fill(grey)
-
-# Global variables declaring
-
-clock = d.time.Clock()
-
-icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
-settingsicon = d.image.load("Assets\Graphics\settings.png")
-settingsicon = d.transform.scale(settingsicon,(80,80))
-quitwidth = 104/downscale
-quiticon = d.image.load("Assets\Graphics\quit.png")
-quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
-hideicon = d.image.load("Assets\Graphics\minimize.png")
-hideicon = d.transform.scale(hideicon,(quitwidth, quitwidth/5))
 lightergrey = d.Color(43, 57, 69)
 light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
@@ -67,41 +54,88 @@ darkblue = d.Color(40, 40, 100)
 lightorange = d.Color(120, 80, 40)
 darkorange = d.Color(60, 30, 0)
 red = d.Color(150,0,0)
-bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
+
+# Resolution
+maxwidth = 15360
+maxheight = 8640
+downscale = 8
+scaledwidth, scaledheight = maxwidth/downscale, maxheight/downscale
+quitwidth = 104/downscale
+
+# Graphics
+d.init()
+window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED)
+icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
+settingsicon = d.image.load("Assets\Graphics\settings.png")
+settingsicon = d.transform.scale(settingsicon,(80,80))
+quiticon = d.image.load("Assets\Graphics\quit.png")
+quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
+hideicon = d.image.load("Assets\Graphics\minimize.png")
+hideicon = d.transform.scale(hideicon,(quitwidth, quitwidth/5))
+wasted = d.image.load("Assets/Graphics/wasted.png")
+wasted = d.transform.scale(wasted,(100,100))
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()     # "JohnPablok's improved Cburnett chess set" on opengameart.org
-all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
-testsquarex = 0
-testsquarey = 0
-dragged = False
-possible_squares = []
-list = []
 pxy = Pxy = (23,18)
 nxy = Nxy = (21,18)
 bxy = Bxy = kxy = Kxy = (18,18)
 rxy = Rxy = (20,18)
 qxy = Qxy = (15,18)
-start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-game_positions = []
+
+# Global
+bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
+all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
+dragged = False
 isfinished = False
 colored = False
+isdropped = False
+possible_squares = []
+list = []
+game_positions = []
 arrows_list = []
 startartsquare = []
-isdropped = False
 buttons = 0
-piece = "A"
 startsquarex = 0
 startsquarey = 0
-wastedking = 0
-wasted = d.image.load("Assets/Graphics/wasted.png")
-wasted = d.transform.scale(wasted,(100,100))
+wastedking = False
+testsquarex = 0
+testsquarey = 0
+piece = "A"
+start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+clock = d.time.Clock()
 
-# Launch variables
+# Launching
 display = "game"
 running = False
 
 
-# Board managing
+
+# FUNCTIONS
+
+
+# General
+
+def draw_frame():
+	global running
+	global window
+	window.fill(grey)
+	if (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65):
+		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
+		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+			running = False
+	else:
+		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
+	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-130 and d.mouse.get_pos()[0]<=scaledwidth-65:
+		d.draw.rect(window, lightergrey, (scaledwidth-130, 0, 65, 33))
+		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+			d.display.iconify()
+	else:
+		d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
+	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
+	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+
+
+# Board
 
 def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
@@ -134,25 +168,6 @@ def str_to_list(FEN_string):
 		position_list[8][2][1]=1
 	globals()["game_positions"].append(copy.deepcopy([position_list[:8], position_list[8][0]%2, position_list[8][1:4], 1]))
 	return position_list
-
-def draw_frame():
-	global running
-	global window
-	window.fill(grey)
-	if (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65):
-		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
-		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
-			running = False
-	else:
-		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
-	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-130 and d.mouse.get_pos()[0]<=scaledwidth-65:
-		d.draw.rect(window, lightergrey, (scaledwidth-130, 0, 65, 33))
-		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
-			d.display.iconify()
-	else:
-		d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
-	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
-	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
 
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
 	global dragged
@@ -216,7 +231,7 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 	window.blit(settingsicon,(1380,145))			
 	if dragged:
 		blit_on_cursor(piece)
-	if wastedking!=0:
+	if wastedking:
 		window.blit(wasted, (560+100*list[10][0], 140+100*list[10][1]))
 
 def blit_on_cursor(piece):
@@ -535,6 +550,13 @@ def canmove(list, whotoplay):
 	return False
 
 
+# Menu
+
+
+def drawmenu():
+	pass
+
+
 # Diplays 
 
 def initboard(FEN_string):
@@ -557,7 +579,7 @@ def initboard(FEN_string):
 		list = str_to_list(FEN_string)
 
 	# Init (in launch() ?)
-	window = d.display.set_mode((scaledwidth, scaledheight), d.RESIZABLE, d.NOFRAME)
+	window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED|d.SCALED)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
 	draw_board(list)
@@ -688,5 +710,10 @@ def launch():
 			pass
 	goodbye()
 	d.quit()
+
+
+
+# INITIALIZING WHOLE PROGRAM
+
 
 launch()
