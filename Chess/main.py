@@ -3,6 +3,7 @@ import pygame.gfxdraw as gfxd
 from os import path
 from math import floor, sin, atan, sqrt
 import copy
+import time
 
 # TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer, local app for playing on chess.com or lichess or …
 # TODO make a menu bar
@@ -52,7 +53,7 @@ clock = d.time.Clock()
 
 icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
 settingsicon = d.image.load("Assets\Graphics\settings.png")
-settingsicon = d.transform.scale(settingsicon,(51,51))
+settingsicon = d.transform.scale(settingsicon,(80,80))
 quitwidth = 104/downscale
 quiticon = d.image.load("Assets\Graphics\quit.png")
 quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
@@ -91,6 +92,9 @@ buttons = 0
 piece = "A"
 startsquarex = 0
 startsquarey = 0
+wastedking = 0
+wasted = d.image.load("Assets/Graphics/wasted.png")
+wasted = d.transform.scale(wasted,(100,100))
 
 # Launch variables
 display = "game"
@@ -102,7 +106,7 @@ running = False
 def str_to_list(FEN_string):
 	"""Turns the FEN string given into a list of 8 lists with each a length of 8, representing the chessboard"""
 	FEN_list = FEN_string.split(" ")
-	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,[0,0],[0,0],[0,0],0], [[0,0],[0,0]]]
+	position_list = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,[0,0],[0,0],[0,0],0], [[0,0],[0,0]], [0,0]]
 	position_listx = 0
 	position_listy = 0
 	numbers = ["1","2","3","4","5","6","7","8"]
@@ -147,7 +151,6 @@ def draw_frame():
 			d.display.iconify()
 	else:
 		d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
-	window.blit(settingsicon,(1360,140))
 	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
 	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
 
@@ -210,8 +213,11 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels+4*xpixels,100*tuuuple[1]+188-xpixels+4*ypixels),(100*tuuuple[0]+608-ypixels+4*xpixels,100*tuuuple[1]+188+xpixels+4*ypixels),(100*tuuuple[2]+608-ypixels-4*xpixels,100*tuuuple[3]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-2*ypixels-4*xpixels,100*tuuuple[3]+188+2*xpixels-4*ypixels),(100*tuuuple[2]+608-xpixels,100*tuuuple[3]+188-ypixels),(100*tuuuple[2]+608+2*ypixels-4*xpixels,100*tuuuple[3]+188-2*xpixels-4*ypixels),(100*tuuuple[2]+608+ypixels-4*xpixels,100*tuuuple[3]+188-xpixels-4*ypixels)), (0,100,0,150))
 					elif xdiff<0:
 						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels-4*xpixels,100*tuuuple[1]+188-xpixels-4*ypixels),(100*tuuuple[0]+608-ypixels-4*xpixels,100*tuuuple[1]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-ypixels+4*xpixels,100*tuuuple[3]+188+xpixels+4*ypixels),(100*tuuuple[2]+608+2*ypixels+4*xpixels,100*tuuuple[3]+188-2*xpixels+4*ypixels),(100*tuuuple[2]+608+xpixels,100*tuuuple[3]+188+ypixels),(100*tuuuple[2]+608-2*ypixels+4*xpixels,100*tuuuple[3]+188+2*xpixels+4*ypixels),(100*tuuuple[2]+608+ypixels+4*xpixels,100*tuuuple[3]+188-xpixels+4*ypixels)), (0,100,0,150))
+	window.blit(settingsicon,(1380,145))			
 	if dragged:
 		blit_on_cursor(piece)
+	if wastedking!=0:
+		window.blit(wasted, (560+100*list[10][0], 140+100*list[10][1]))
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
@@ -440,6 +446,7 @@ def ischeck(list, squarey, squarex, squaredefender):
 def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex):
 	global game_positions
 	global isfinished
+	global wastedking
 	if list[squarey][squarex] in all_pieces[0] or list[squarey][squarex] in all_pieces[1]:
 		game_positions=[game_positions[-1]]
 	list[squarey][squarex] = piece
@@ -508,6 +515,8 @@ def aftermove(list, piece, squarey, squarex, startsquarey, startsquarex):
 				d.display.set_caption('White\'s game')
 				d.display.set_icon(d.image.load("Assets/Graphics/WindowIconWhite.png"))
 				isfinished = True
+			wastedking = True
+			list[10][1], list[10][0] = king_coor(list)
 		else:
 			print("Draw : Stalemate !")
 			d.display.set_caption('No one\'s game')
@@ -644,6 +653,22 @@ def initmenu(): # opens when escape on chess game
 	global window
 
 
+# Just not being rude
+
+def goodbye():
+	global window
+	d.quit()
+	d.init()
+	window = d.display.set_mode((scaledwidth/3, scaledheight/5), d.NOFRAME)
+	window.fill(grey)
+	font = d.font.SysFont('chalkduster.ttf', 400//downscale)
+	img = font.render('Have a wonderful hour !', True, lightorange)
+	text_rect = img.get_rect(center=(scaledwidth/6, scaledheight/10))
+	window.blit(img, text_rect)
+	d.display.update()
+	time.sleep(1)
+
+
 # Launch
 
 def launch():
@@ -661,6 +686,7 @@ def launch():
 			pass
 		elif display == "settings":
 			pass
+	goodbye()
 	d.quit()
 
 launch()
