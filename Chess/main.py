@@ -25,6 +25,7 @@ import time
 # TODO user can choose fullscreen
 # TODO describe when hovered element
 # TODO Ctrl+click to get keyboard shortcut of any element
+# TODO in boring situations, let user choose to draw mirrored arrows
 
 
 # def list_to_str(chess_board):
@@ -65,9 +66,12 @@ quitwidth = 104/downscale
 # Graphics
 d.init()
 window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED)
+board = d.surface.Surface((800,800))
 icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
 settingsicon = d.image.load("Assets\Graphics\settings.png")
 settingsicon = d.transform.scale(settingsicon,(80,80))
+reverseicon = d.image.load("Assets\Graphics\\reverse.png")
+reverseicon = d.transform.scale(reverseicon,(80,80))
 quiticon = d.image.load("Assets\Graphics\quit.png")
 quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
 hideicon = d.image.load("Assets\Graphics\minimize.png")
@@ -103,6 +107,7 @@ testsquarey = 0
 piece = "A"
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 clock = d.time.Clock()
+isflipped = False
 
 # Launching
 display = "game"
@@ -172,67 +177,135 @@ def str_to_list(FEN_string):
 def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, startsquarex=-1):
 	global dragged
 	global arrows_list
-	for y in range(8):
-		for x in range(8):
-			if (x+y)%2==1:
-				d.draw.rect(window, dark, (x*100+560, y*100+140, 100, 100))
-			else:
-				d.draw.rect(window, light, (x*100+560, y*100+140, 100, 100))
-	kingsquareyx = king_coor(list) if not kingmoving else [startsquarey,startsquarex]
-	if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
-		d.draw.rect(window, red, (kingsquareyx[1]*100+560, kingsquareyx[0]*100+140, 100, 100))
-		if not isfinished:
-			if (kingsquareyx[1]+kingsquareyx[0])%2==1:
-				d.draw.circle(window, dark, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
-			else:
-				d.draw.circle(window, light, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
-	if list[8][0]>=1:
-		for c in list[9]:
-			if (c[0]+c[1])%2==1:
-				d.draw.rect(window, darkorange, (c[1]*100+560, c[0]*100+140, 100, 100))
-			else:
-				d.draw.rect(window, lightorange, (c[1]*100+560, c[0]*100+140, 100, 100))
-	for y in range(8):
-		for x in range(8):
-			if globals()["bglist"][y][x]==1:
+	if not isflipped:
+		for y in range(8):
+			for x in range(8):
 				if (x+y)%2==1:
-					d.draw.rect(window, darkblue, (x*100+560, y*100+140, 100, 100))
+					d.draw.rect(window, dark, (x*100+560, y*100+140, 100, 100))
 				else:
-					d.draw.rect(window, lightblue, (x*100+560, y*100+140, 100, 100))
-	for y in range(8):
-		for x in range(8):
-			if list[y][x]!=0:
-				window.blit(globals()[list[y][x]], (100*x+560+globals()[list[y][x]+"xy"][0],100*y+140+globals()[list[y][x]+"xy"][1]))
-	for p in possibilities:
-		gfxd.filled_circle(window, 100*p[1]+608,100*p[0]+188, 15, (50,50,50,100))
-	if arrows_list!=[]:
-		for tuuuple in arrows_list:
-			xdiff = tuuuple[2]-tuuuple[0]
-			ydiff = tuuuple[3]-tuuuple[1]
-			if not (xdiff==0 and ydiff==0):
-				if xdiff==0:
-					if ydiff>0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+598,100*tuuuple[1]+228),(100*tuuuple[0]+618,100*tuuuple[1]+228),(100*tuuuple[2]+618,100*tuuuple[3]+148),(100*tuuuple[2]+628,100*tuuuple[3]+148),(100*tuuuple[2]+608,100*tuuuple[3]+178),(100*tuuuple[2]+588,100*tuuuple[3]+148),(100*tuuuple[2]+598,100*tuuuple[3]+148)), (0,100,0,150))
-					else:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+598,100*tuuuple[1]+148),(100*tuuuple[0]+618,100*tuuuple[1]+148),(100*tuuuple[2]+618,100*tuuuple[3]+228),(100*tuuuple[2]+628,100*tuuuple[3]+228),(100*tuuuple[2]+608,100*tuuuple[3]+198),(100*tuuuple[2]+588,100*tuuuple[3]+228),(100*tuuuple[2]+598,100*tuuuple[3]+228)), (0,100,0,150))
-				elif ydiff==0:
-					if xdiff>0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+648,100*tuuuple[1]+198),(100*tuuuple[0]+648,100*tuuuple[1]+178),(100*tuuuple[2]+568,100*tuuuple[3]+178),(100*tuuuple[2]+568,100*tuuuple[3]+168),(100*tuuuple[2]+598,100*tuuuple[3]+188),(100*tuuuple[2]+568,100*tuuuple[3]+208),(100*tuuuple[2]+568,100*tuuuple[3]+198)), (0,100,0,150))
-					else:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+568,100*tuuuple[1]+198),(100*tuuuple[0]+568,100*tuuuple[1]+178),(100*tuuuple[2]+648,100*tuuuple[3]+178),(100*tuuuple[2]+648,100*tuuuple[3]+208),(100*tuuuple[2]+618,100*tuuuple[3]+188),(100*tuuuple[2]+648,100*tuuuple[3]+168),(100*tuuuple[2]+648,100*tuuuple[3]+198)), (0,100,0,150))
+					d.draw.rect(window, light, (x*100+560, y*100+140, 100, 100))
+		kingsquareyx = king_coor(list) if not kingmoving else [startsquarey,startsquarex]
+		if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
+			d.draw.rect(window, red, (kingsquareyx[1]*100+560, kingsquareyx[0]*100+140, 100, 100))
+			if not isfinished:
+				if (kingsquareyx[1]+kingsquareyx[0])%2==1:
+					d.draw.circle(window, dark, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
 				else:
-					sine = sin(atan(ydiff/xdiff))
-					ypixels = 10*sine
-					xpixels = 10*sqrt(1-sine**2)
-					if xdiff>0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels+4*xpixels,100*tuuuple[1]+188-xpixels+4*ypixels),(100*tuuuple[0]+608-ypixels+4*xpixels,100*tuuuple[1]+188+xpixels+4*ypixels),(100*tuuuple[2]+608-ypixels-4*xpixels,100*tuuuple[3]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-2*ypixels-4*xpixels,100*tuuuple[3]+188+2*xpixels-4*ypixels),(100*tuuuple[2]+608-xpixels,100*tuuuple[3]+188-ypixels),(100*tuuuple[2]+608+2*ypixels-4*xpixels,100*tuuuple[3]+188-2*xpixels-4*ypixels),(100*tuuuple[2]+608+ypixels-4*xpixels,100*tuuuple[3]+188-xpixels-4*ypixels)), (0,100,0,150))
-					elif xdiff<0:
-						gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels-4*xpixels,100*tuuuple[1]+188-xpixels-4*ypixels),(100*tuuuple[0]+608-ypixels-4*xpixels,100*tuuuple[1]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-ypixels+4*xpixels,100*tuuuple[3]+188+xpixels+4*ypixels),(100*tuuuple[2]+608+2*ypixels+4*xpixels,100*tuuuple[3]+188-2*xpixels+4*ypixels),(100*tuuuple[2]+608+xpixels,100*tuuuple[3]+188+ypixels),(100*tuuuple[2]+608-2*ypixels+4*xpixels,100*tuuuple[3]+188+2*xpixels+4*ypixels),(100*tuuuple[2]+608+ypixels+4*xpixels,100*tuuuple[3]+188-xpixels+4*ypixels)), (0,100,0,150))
-	window.blit(settingsicon,(1380,145))			
-	if dragged:
-		blit_on_cursor(piece)
-	if wastedking:
-		window.blit(wasted, (560+100*list[10][0], 140+100*list[10][1]))
+					d.draw.circle(window, light, (kingsquareyx[1]*100+610, kingsquareyx[0]*100+190), 50)
+		if list[8][0]>=1:
+			for c in list[9]:
+				if (c[0]+c[1])%2==1:
+					d.draw.rect(window, darkorange, (c[1]*100+560, c[0]*100+140, 100, 100))
+				else:
+					d.draw.rect(window, lightorange, (c[1]*100+560, c[0]*100+140, 100, 100))
+		for y in range(8):
+			for x in range(8):
+				if globals()["bglist"][y][x]==1:
+					if (x+y)%2==1:
+						d.draw.rect(window, darkblue, (x*100+560, y*100+140, 100, 100))
+					else:
+						d.draw.rect(window, lightblue, (x*100+560, y*100+140, 100, 100))
+		for y in range(8):
+			for x in range(8):
+				if list[y][x]!=0:
+					window.blit(globals()[list[y][x]], (100*x+560+globals()[list[y][x]+"xy"][0],100*y+140+globals()[list[y][x]+"xy"][1]))
+		for p in possibilities:
+			gfxd.filled_circle(window, 100*p[1]+608,100*p[0]+188, 15, (50,50,50,100))
+		if arrows_list!=[]:
+			for tuuuple in arrows_list:
+				xdiff = tuuuple[2]-tuuuple[0]
+				ydiff = tuuuple[3]-tuuuple[1]
+				if not (xdiff==0 and ydiff==0):
+					if xdiff==0:
+						if ydiff>0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+598,100*tuuuple[1]+228),(100*tuuuple[0]+618,100*tuuuple[1]+228),(100*tuuuple[2]+618,100*tuuuple[3]+148),(100*tuuuple[2]+628,100*tuuuple[3]+148),(100*tuuuple[2]+608,100*tuuuple[3]+178),(100*tuuuple[2]+588,100*tuuuple[3]+148),(100*tuuuple[2]+598,100*tuuuple[3]+148)), (0,100,0,150))
+						else:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+598,100*tuuuple[1]+148),(100*tuuuple[0]+618,100*tuuuple[1]+148),(100*tuuuple[2]+618,100*tuuuple[3]+228),(100*tuuuple[2]+628,100*tuuuple[3]+228),(100*tuuuple[2]+608,100*tuuuple[3]+198),(100*tuuuple[2]+588,100*tuuuple[3]+228),(100*tuuuple[2]+598,100*tuuuple[3]+228)), (0,100,0,150))
+					elif ydiff==0:
+						if xdiff>0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+648,100*tuuuple[1]+198),(100*tuuuple[0]+648,100*tuuuple[1]+178),(100*tuuuple[2]+568,100*tuuuple[3]+178),(100*tuuuple[2]+568,100*tuuuple[3]+168),(100*tuuuple[2]+598,100*tuuuple[3]+188),(100*tuuuple[2]+568,100*tuuuple[3]+208),(100*tuuuple[2]+568,100*tuuuple[3]+198)), (0,100,0,150))
+						else:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+568,100*tuuuple[1]+198),(100*tuuuple[0]+568,100*tuuuple[1]+178),(100*tuuuple[2]+648,100*tuuuple[3]+178),(100*tuuuple[2]+648,100*tuuuple[3]+208),(100*tuuuple[2]+618,100*tuuuple[3]+188),(100*tuuuple[2]+648,100*tuuuple[3]+168),(100*tuuuple[2]+648,100*tuuuple[3]+198)), (0,100,0,150))
+					else:
+						sine = sin(atan(ydiff/xdiff))
+						ypixels = 10*sine
+						xpixels = 10*sqrt(1-sine**2)
+						if xdiff>0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels+4*xpixels,100*tuuuple[1]+188-xpixels+4*ypixels),(100*tuuuple[0]+608-ypixels+4*xpixels,100*tuuuple[1]+188+xpixels+4*ypixels),(100*tuuuple[2]+608-ypixels-4*xpixels,100*tuuuple[3]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-2*ypixels-4*xpixels,100*tuuuple[3]+188+2*xpixels-4*ypixels),(100*tuuuple[2]+608-xpixels,100*tuuuple[3]+188-ypixels),(100*tuuuple[2]+608+2*ypixels-4*xpixels,100*tuuuple[3]+188-2*xpixels-4*ypixels),(100*tuuuple[2]+608+ypixels-4*xpixels,100*tuuuple[3]+188-xpixels-4*ypixels)), (0,100,0,150))
+						elif xdiff<0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels-4*xpixels,100*tuuuple[1]+188-xpixels-4*ypixels),(100*tuuuple[0]+608-ypixels-4*xpixels,100*tuuuple[1]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-ypixels+4*xpixels,100*tuuuple[3]+188+xpixels+4*ypixels),(100*tuuuple[2]+608+2*ypixels+4*xpixels,100*tuuuple[3]+188-2*xpixels+4*ypixels),(100*tuuuple[2]+608+xpixels,100*tuuuple[3]+188+ypixels),(100*tuuuple[2]+608-2*ypixels+4*xpixels,100*tuuuple[3]+188+2*xpixels+4*ypixels),(100*tuuuple[2]+608+ypixels+4*xpixels,100*tuuuple[3]+188-xpixels+4*ypixels)), (0,100,0,150))
+		window.blit(settingsicon,(1370,150))
+		window.blit(reverseicon,(1370,250))		
+		if dragged:
+			blit_on_cursor(piece)
+		if wastedking:
+			window.blit(wasted, (560+100*list[10][0], 140+100*list[10][1]))
+	elif isflipped:
+		for y in range(8):
+			for x in range(8):
+				if (x+y)%2==1:
+					d.draw.rect(window, dark, (1260-x*100, 840-y*100, 100, 100))
+				else:
+					d.draw.rect(window, light, (1260-x*100, 840-y*100, 100, 100))
+		kingsquareyx = king_coor(list) if not kingmoving else [startsquarey,startsquarex]
+		if ischeck(list, kingsquareyx[0], kingsquareyx[1], list[8][0]%2):
+			d.draw.rect(window, red, (1260-kingsquareyx[1]*100, 840-kingsquareyx[0]*100, 100, 100))
+			if not isfinished:
+				if (kingsquareyx[1]+kingsquareyx[0])%2==1:
+					d.draw.circle(window, dark, (1310-kingsquareyx[1]*100, 890-kingsquareyx[0]*100), 50)
+				else:
+					d.draw.circle(window, light, (1310-kingsquareyx[1]*100, 890-kingsquareyx[0]*100), 50)
+		if list[8][0]>=1:
+			for c in list[9]:
+				if (c[0]+c[1])%2==1:
+					d.draw.rect(window, darkorange, (1260-c[1]*100, 840-c[0]*100, 100, 100))
+				else:
+					d.draw.rect(window, lightorange, (1260-c[1]*100, 840-c[0]*100, 100, 100))
+		for y in range(8):
+			for x in range(8):
+				if globals()["bglist"][y][x]==1:
+					if (x+y)%2==1:
+						d.draw.rect(window, darkblue, (1260-x*100, 840-y*100, 100, 100))
+					else:
+						d.draw.rect(window, lightblue, (1260-x*100, 840-y*100, 100, 100))
+		for y in range(8):
+			for x in range(8):
+				if list[y][x]!=0:
+					window.blit(globals()[list[y][x]], (1260-100*x+globals()[list[y][x]+"xy"][0],840-100*y+globals()[list[y][x]+"xy"][1]))
+		for p in possibilities:
+			gfxd.filled_circle(window, 1308-100*p[1],888-100*p[0], 15, (50,50,50,100))
+		if arrows_list!=[]:
+			for tuuuple in arrows_list:
+				xdiff = tuuuple[2]-tuuuple[0]
+				ydiff = tuuuple[3]-tuuuple[1]
+				if not (xdiff==0 and ydiff==0):
+					if xdiff==0:
+						if ydiff>0:
+							gfxd.filled_polygon(window, ((1318-100*tuuuple[0],848-100*tuuuple[1]),(1298-100*tuuuple[0],848-100*tuuuple[1]),(1298-100*tuuuple[2],928-100*tuuuple[3]),(1288-100*tuuuple[2],928-100*tuuuple[3]),(1308-100*tuuuple[2],898-100*tuuuple[3]),(1328-100*tuuuple[2],928-100*tuuuple[3]),(1318-100*tuuuple[2],928-100*tuuuple[3])), (0,100,0,150))
+						else:
+							gfxd.filled_polygon(window, ((1298-100*tuuuple[0],928-100*tuuuple[1]),(1318-100*tuuuple[0],928-100*tuuuple[1]),(1318-100*tuuuple[2],848-100*tuuuple[3]),(1328-100*tuuuple[2],848-100*tuuuple[3]),(1308-100*tuuuple[2],878-100*tuuuple[3]),(1288-100*tuuuple[2],848-100*tuuuple[3]),(1298-100*tuuuple[2],848-100*tuuuple[3])), (0,100,0,150))
+					elif ydiff==0:
+						if xdiff>0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+648,100*tuuuple[1]+198),(100*tuuuple[0]+648,100*tuuuple[1]+178),(100*tuuuple[2]+568,100*tuuuple[3]+178),(100*tuuuple[2]+568,100*tuuuple[3]+168),(100*tuuuple[2]+598,100*tuuuple[3]+188),(100*tuuuple[2]+568,100*tuuuple[3]+208),(100*tuuuple[2]+568,100*tuuuple[3]+198)), (0,100,0,150))
+						else:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+568,100*tuuuple[1]+198),(100*tuuuple[0]+568,100*tuuuple[1]+178),(100*tuuuple[2]+648,100*tuuuple[3]+178),(100*tuuuple[2]+648,100*tuuuple[3]+208),(100*tuuuple[2]+618,100*tuuuple[3]+188),(100*tuuuple[2]+648,100*tuuuple[3]+168),(100*tuuuple[2]+648,100*tuuuple[3]+198)), (0,100,0,150))
+					else:
+						sine = sin(atan(ydiff/xdiff))
+						ypixels = 10*sine
+						xpixels = 10*sqrt(1-sine**2)
+						if xdiff>0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels+4*xpixels,100*tuuuple[1]+188-xpixels+4*ypixels),(100*tuuuple[0]+608-ypixels+4*xpixels,100*tuuuple[1]+188+xpixels+4*ypixels),(100*tuuuple[2]+608-ypixels-4*xpixels,100*tuuuple[3]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-2*ypixels-4*xpixels,100*tuuuple[3]+188+2*xpixels-4*ypixels),(100*tuuuple[2]+608-xpixels,100*tuuuple[3]+188-ypixels),(100*tuuuple[2]+608+2*ypixels-4*xpixels,100*tuuuple[3]+188-2*xpixels-4*ypixels),(100*tuuuple[2]+608+ypixels-4*xpixels,100*tuuuple[3]+188-xpixels-4*ypixels)), (0,100,0,150))
+						elif xdiff<0:
+							gfxd.filled_polygon(window, ((100*tuuuple[0]+608+ypixels-4*xpixels,100*tuuuple[1]+188-xpixels-4*ypixels),(100*tuuuple[0]+608-ypixels-4*xpixels,100*tuuuple[1]+188+xpixels-4*ypixels),(100*tuuuple[2]+608-ypixels+4*xpixels,100*tuuuple[3]+188+xpixels+4*ypixels),(100*tuuuple[2]+608+2*ypixels+4*xpixels,100*tuuuple[3]+188-2*xpixels+4*ypixels),(100*tuuuple[2]+608+xpixels,100*tuuuple[3]+188+ypixels),(100*tuuuple[2]+608-2*ypixels+4*xpixels,100*tuuuple[3]+188+2*xpixels+4*ypixels),(100*tuuuple[2]+608+ypixels+4*xpixels,100*tuuuple[3]+188-xpixels+4*ypixels)), (0,100,0,150))
+		window.blit(settingsicon,(1370,150))
+		window.blit(reverseicon,(1370,250))		
+		if dragged:
+			blit_on_cursor(piece)
+		if wastedking:
+			window.blit(wasted, (560+100*list[10][0], 140+100*list[10][1]))
+	else:
+		print("Flipping Error")
+		d.quit()
 
 def blit_on_cursor(piece):
 	coordinates = (d.mouse.get_pos()[0]-((100-2*globals()[piece+"xy"][0])/2-2), d.mouse.get_pos()[1]-((100-2*globals()[piece+"xy"][1])//2-2))
@@ -575,6 +648,7 @@ def initboard(FEN_string):
 	global piece
 	global startsquarex
 	global startsquarey
+	global isflipped
 	if "/" in FEN_string:
 		list = str_to_list(FEN_string)
 
@@ -591,11 +665,22 @@ def initboard(FEN_string):
 	drawing = False
 	while running and display == "local":
 		for event in d.event.get():
-			squarey=floor((d.mouse.get_pos()[1]-140)/100)
-			squarex=floor((d.mouse.get_pos()[0]-560)/100)
+			if not isflipped:
+				squarey=floor((d.mouse.get_pos()[1]-140)/100)
+				squarex=floor((d.mouse.get_pos()[0]-560)/100)
+			elif isflipped:
+				squarey=floor((940-d.mouse.get_pos()[1])/100)
+				squarex=floor((1360-d.mouse.get_pos()[0])/100)
+			else:
+				print("Flipping Error")
+				d.quit()
 
 			if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE) or (event.type == d.QUIT): # You can press Esc to quit app
 					running = False
+			
+			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=150 and d.mouse.get_pos()[1]<=330:
+				if d.mouse.get_pos()[1]>=250:
+					isflipped=True if isflipped==False else False
 
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
