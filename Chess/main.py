@@ -759,6 +759,9 @@ def initboard(FEN_string):
 def initmenu(): # opens when escape on chess game
 	global window
 
+def initsettings():
+	pass
+
 
 # Just not being rude
 
