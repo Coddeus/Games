@@ -302,7 +302,7 @@ def draw_board(list, possibilities=[], kingmoving = False, startsquarey=-17, sta
 		if dragged:
 			blit_on_cursor(piece)
 		if wastedking:
-			window.blit(wasted, (560+100*list[10][0], 140+100*list[10][1]))
+			window.blit(wasted, (1260-100*list[10][0], 840-100*list[10][1]))
 	else:
 		print("Flipping Error")
 		d.quit()
@@ -759,7 +759,7 @@ def initboard(FEN_string):
 			draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-			clock.tick(60)
+		clock.tick(200)
 
 def initmenu(): # opens when escape on chess game
 	global window
@@ -770,16 +770,17 @@ def initmenu(): # opens when escape on chess game
 	d.display.set_caption('Chess - Settings')
 	window.fill(grey)
 	while running and display == "menu":
+
 		for event in d.event.get():
 			if event.type == d.QUIT or (event.type == d.KEYDOWN and event.key == d.K_ESCAPE):
 				running = False
-			
+
 			 # if click on any interactive image -> init___
-			
+
 			draw_frame()
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-			clock.tick(60)
+		clock.tick(200)
 
 def initsettings():
 	global window
@@ -787,7 +788,7 @@ def initsettings():
 	global display
 	global buttons
 	d.display.set_icon(settingsicon)
-	d.display.set_caption('Chess - Settings')
+	d.display.set_caption('Chess - Menu')
 	while running and display == "settings":
 		for event in d.event.get():
 
@@ -802,7 +803,7 @@ def initsettings():
 			draw_frame()
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-			clock.tick(60)
+		clock.tick(200)
 
 
 # Just not being rude
