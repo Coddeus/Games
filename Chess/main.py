@@ -67,16 +67,16 @@ quitwidth = 104/downscale
 d.init()
 window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED)
 board = d.surface.Surface((800,800))
-icon = d.image.load("Assets\Graphics\WindowIconGrey.png") 
-settingsicon = d.image.load("Assets\Graphics\settings.png")
+icon = d.image.load("Assets\Graphics\WindowIconGrey.png").convert_alpha()  
+settingsicon = d.image.load("Assets\Graphics\settings.png").convert_alpha() 
 settingsicon = d.transform.scale(settingsicon,(80,80))
-reverseicon = d.image.load("Assets\Graphics\\reverse.png")
+reverseicon = d.image.load("Assets\Graphics\\reverse.png").convert_alpha() 
 reverseicon = d.transform.scale(reverseicon,(80,80))
-quiticon = d.image.load("Assets\Graphics\quit.png")
+quiticon = d.image.load("Assets\Graphics\quit.png").convert_alpha() 
 quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
-hideicon = d.image.load("Assets\Graphics\minimize.png")
+hideicon = d.image.load("Assets\Graphics\minimize.png").convert_alpha() 
 hideicon = d.transform.scale(hideicon,(quitwidth, quitwidth/5))
-wasted = d.image.load("Assets/Graphics/wasted.png")
+wasted = d.image.load("Assets/Graphics/wasted.png").convert_alpha() 
 wasted = d.transform.scale(wasted,(100,100))
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()     # "JohnPablok's improved Cburnett chess set" on opengameart.org
@@ -676,16 +676,16 @@ def initboard(FEN_string):
 				d.quit()
 
 			if event.type == d.QUIT: # You can press Esc to quit app
-					running = False
+				running = False
 			
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE: # Save game  before initting
-				initmenu() # TODO here
+				display = "menu" # TODO here
 			
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=340:
 				if d.mouse.get_pos()[1]>240:
 					isflipped=True if isflipped==False else False
 				else:
-					initsettings() # TODO here
+					display = "settings" # TODO here
 
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
@@ -759,13 +759,50 @@ def initboard(FEN_string):
 			draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-		clock.tick(200)
+			clock.tick(60)
 
 def initmenu(): # opens when escape on chess game
 	global window
+	global running
+	global display
+	global buttons
+	d.display.set_icon(icon) # TODO Change when HOME svg is done
+	d.display.set_caption('Chess - Settings')
+	window.fill(grey)
+	while running and display == "menu":
+		for event in d.event.get():
+			if event.type == d.QUIT or (event.type == d.KEYDOWN and event.key == d.K_ESCAPE):
+				running = False
+			
+			 # if click on any interactive image -> init___
+			
+			draw_frame()
+			d.display.update()
+			buttons = d.mouse.get_pressed(5)
+			clock.tick(60)
 
 def initsettings():
-	pass
+	global window
+	global running
+	global display
+	global buttons
+	d.display.set_icon(settingsicon)
+	d.display.set_caption('Chess - Settings')
+	while running and display == "settings":
+		for event in d.event.get():
+
+			if event.type == d.QUIT:
+				running = False
+
+			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE:
+				display = "menu"
+			
+			# tabs on left, list of customization
+
+			draw_frame()
+			d.display.update()
+			buttons = d.mouse.get_pressed(5)
+			clock.tick(60)
 
 
 # Just not being rude
@@ -796,10 +833,10 @@ def launch():
 		if display == "local":
 			initboard(chess_position)
 		elif display == "menu":
-			pass
+			initmenu()
 		elif display == "settings":
-			pass
-		elif display == "settings":
+			initsettings()
+		elif display == "sssettings":
 			pass
 	goodbye()
 	d.quit()
