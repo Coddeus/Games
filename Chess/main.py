@@ -25,7 +25,7 @@ import time
 # TODO user can choose fullscreen
 # TODO describe when hovered element
 # TODO Ctrl+click to get keyboard shortcut of any element
-# TODO in boring situations, let user choose to draw mirrored arrows
+# TODO in boring situations, let user choose to draw mirrored arrows :)
 
 
 # def list_to_str(chess_board):
@@ -47,7 +47,12 @@ import time
 
 # Colors
 grey = d.Color(29, 38, 46)
-lightergrey = d.Color(43, 57, 69)
+lightgrey = d.Color(43, 57, 69)
+lightergrey = d.Color(57, 76, 92)
+lightestgrey = d.Color(85, 114, 138)
+darkgrey = d.Color(24, 32, 39)
+darkergrey = d.Color(21, 27, 33)
+darkestgrey = d.Color(20, 26, 31)
 light = d.Color(172, 115, 57)
 dark = d.Color(102, 51, 0)
 lightblue = d.Color(100, 100, 255)
@@ -108,6 +113,7 @@ piece = "A"
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 clock = d.time.Clock()
 isflipped = False
+selected = [-1, -1]
 
 # Launching
 display = "game"
@@ -131,7 +137,7 @@ def draw_frame():
 	else:
 		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
 	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-130 and d.mouse.get_pos()[0]<=scaledwidth-65:
-		d.draw.rect(window, lightergrey, (scaledwidth-130, 0, 65, 33))
+		d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
 		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
 			d.display.iconify()
 	else:
@@ -625,7 +631,6 @@ def canmove(list, whotoplay):
 
 # Menu
 
-
 def drawmenu():
 	pass
 
@@ -649,11 +654,12 @@ def initboard(FEN_string):
 	global startsquarex
 	global startsquarey
 	global isflipped
-	if "/" in FEN_string:
-		list = str_to_list(FEN_string)
+	if list==[]:
+		if "/" in FEN_string:
+			list = str_to_list(FEN_string)
 
-	# Init (in launch() ?)
-	window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED|d.SCALED)
+		# Init (in launch() ?)
+		window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
 	draw_board(list)
@@ -681,11 +687,12 @@ def initboard(FEN_string):
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE: # Save game  before initting
 				display = "menu" # TODO here
 			
-			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=340:
+			elif (buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=239) or event.type == d.KEYDOWN and event.key == d.K_s:
+				display = "settings"
+
+			elif (buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=240 and d.mouse.get_pos()[1]<=339) or event.type == d.KEYDOWN and event.key == d.K_f:
 				if d.mouse.get_pos()[1]>240:
 					isflipped=True if isflipped==False else False
-				else:
-					display = "settings" # TODO here
 
 			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
@@ -759,7 +766,7 @@ def initboard(FEN_string):
 			draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-		clock.tick(200)
+		clock.tick(60)
 
 def initmenu(): # opens when escape on chess game
 	global window
@@ -780,13 +787,14 @@ def initmenu(): # opens when escape on chess game
 			draw_frame()
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-		clock.tick(200)
+		clock.tick(60)
 
-def initsettings():
+def initsettings(): # Miscellaneous : when op. settings, go to General/latest tab
 	global window
 	global running
 	global display
 	global buttons
+	global selected
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Menu')
 	while running and display == "settings":
@@ -796,14 +804,48 @@ def initsettings():
 				running = False
 
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE:
-				display = "menu"
-			
-			# tabs on left, list of customization
+				display = "local"
 
+			mousex, mousey = d.mouse.get_pos()
 			draw_frame()
+			d.draw.rect(window, darkgrey, (0,0,304,1080), 0, 0)
+			d.draw.rect(window, lightgrey, (300,50,8,980), 0, 15)
+			
+			if 0<=mousex<=300:
+				if 100<=mousey<=400:
+					for i in range(6):
+						if 101+50*i<=mousey<=150+50*i:
+							selected[1] = i
+							d.draw.rect(window, darkergrey, (10,100+50*i,280,50), 0,13)
+							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
+								selected[0] = i
+
+			font = d.font.SysFont('verdana', 20)
+			tabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
+			for i in range(6):
+				if selected[1]!=i and selected[0]!=i:
+					img = font.render(tabs[i], True, lightergrey)
+				else:
+					img = font.render(tabs[i], True, lightestgrey)
+				window.blit(img, (30,110+50*i))
+			selected[1]=-1
+
+			if selected[0]==0:
+				pass
+			if selected[0]==1:
+				pass
+			if selected[0]==2:
+				pass
+			if selected[0]==3:
+				pass
+			if selected[0]==4:
+				pass
+			if selected[0]==5:
+				pass
+
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
-		clock.tick(200)
+		clock.tick(60)
 
 
 # Just not being rude
@@ -814,7 +856,7 @@ def goodbye():
 	d.init()
 	window = d.display.set_mode((scaledwidth/3, scaledheight/5), d.NOFRAME)
 	window.fill(grey)
-	font = d.font.SysFont('chalkduster.ttf', 400//downscale)
+	font = d.font.SysFont('chalkduster', 400//downscale)
 	img = font.render('Have a wonderful hour !', True, lightorange)
 	text_rect = img.get_rect(center=(scaledwidth/6, scaledheight/10))
 	window.blit(img, text_rect)
@@ -839,6 +881,7 @@ def launch():
 			initsettings()
 		elif display == "sssettings":
 			pass
+		draw_frame()
 	goodbye()
 	d.quit()
 
