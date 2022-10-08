@@ -70,7 +70,7 @@ quitwidth = 104/downscale
 
 # Graphics
 d.init()
-window = d.display.set_mode((scaledwidth, scaledheight), d.SCALED | d.NOFRAME)
+window = d.display.set_mode((scaledwidth, scaledheight), d.FULLSCREEN | d.SCALED | d.NOFRAME)
 board = d.surface.Surface((800,800))
 icon = d.image.load("Assets\Graphics\WindowIconGrey.png").convert_alpha()  
 settingsicon = d.image.load("Assets\Graphics\settings.png").convert_alpha() 
@@ -659,7 +659,7 @@ def initboard(FEN_string):
 			list = str_to_list(FEN_string)
 
 		# Init (in launch() ?)
-		window = d.display.set_mode((scaledwidth, scaledheight), d.SCALED | d.NOFRAME)
+		window = d.display.set_mode((scaledwidth, scaledheight), d.FULLSCREEN | d.SCALED | d.NOFRAME)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
 	draw_board(list)
