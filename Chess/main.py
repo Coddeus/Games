@@ -70,7 +70,7 @@ quitwidth = 104/downscale
 
 # Graphics
 d.init()
-window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED)
+window = d.display.set_mode((scaledwidth, scaledheight), d.SCALED | d.NOFRAME)
 board = d.surface.Surface((800,800))
 icon = d.image.load("Assets\Graphics\WindowIconGrey.png").convert_alpha()  
 settingsicon = d.image.load("Assets\Graphics\settings.png").convert_alpha() 
@@ -659,7 +659,7 @@ def initboard(FEN_string):
 			list = str_to_list(FEN_string)
 
 		# Init (in launch() ?)
-		window = d.display.set_mode((scaledwidth, scaledheight), d.NOFRAME|d.SCALED)
+		window = d.display.set_mode((scaledwidth, scaledheight), d.SCALED | d.NOFRAME)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
 	draw_board(list)
@@ -774,7 +774,7 @@ def initmenu(): # opens when escape on chess game
 	global display
 	global buttons
 	d.display.set_icon(icon) # TODO Change when HOME svg is done
-	d.display.set_caption('Chess - Settings')
+	d.display.set_caption('Chess - Menu')
 	window.fill(grey)
 	while running and display == "menu":
 
@@ -796,7 +796,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global buttons
 	global selected
 	d.display.set_icon(settingsicon)
-	d.display.set_caption('Chess - Menu')
+	d.display.set_caption('Chess - Settings')
 	while running and display == "settings":
 		for event in d.event.get():
 
@@ -820,7 +820,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
 								selected[0] = i
 
-			font = d.font.SysFont('verdana', 20)
+			font = d.font.SysFont('arialblack', 20)
 			tabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
 			for i in range(6):
 				if selected[1]!=i and selected[0]!=i:
