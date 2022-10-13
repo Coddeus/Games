@@ -820,7 +820,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
 								selected[0] = i
 
-			font = d.font.SysFont('arialblack', 20)
+			font = d.font.SysFont('cambria', 20)
 			tabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
 			for i in range(6):
 				if selected[1]!=i and selected[0]!=i:
@@ -890,4 +890,5 @@ def launch():
 # INITIALIZING WHOLE PROGRAM
 
 
-launch()
+if __name__ == "__main__":
+	launch()
