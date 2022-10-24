@@ -89,6 +89,8 @@ wasted = d.image.load("Assets/Graphics/wasted.png").convert_alpha()
 wasted = d.transform.scale(wasted,(100,100))
 settings_yes = d.image.load("Assets/Graphics/settings_yes.png").convert_alpha()
 settings_no = d.image.load("Assets/Graphics/settings_no.png").convert_alpha()
+dropdown_isclosed = d.image.load("Assets/Graphics/dropdown_isclosed.png").convert_alpha()
+dropdown_isopen = d.image.load("Assets/Graphics/dropdown_isopen.png").convert_alpha()
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()     # "JohnPablok's improved Cburnett chess set" on opengameart.org
 pxy = Pxy = (23,18)
@@ -119,9 +121,13 @@ piece = "A"
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 clock = d.time.Clock()
 isflipped = False
-selected = [-1, -1]
+selectedtab = [-1, -1]
+selecteddropdown = ""
 fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
 settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
+dropdowns = {
+	"default_settings_window": [settingstabs, 0],
+}
 default_settings_info = {
 	"show_possible_squares": True,
 	"default_settings_window": "General",
@@ -132,6 +138,16 @@ settings_info = default_settings_info
 display = "game"
 running = False
 
+
+
+# CLASSES
+
+
+# Settings
+
+class dropdownitems:
+	def __init__(self, parameter, list) -> None:
+		pass
 
 
 # FUNCTIONS
@@ -651,18 +667,42 @@ def drawmenu():
 # Settings
 
 def settingsoptions(mousex, mousey):
+	global selecteddropdown
+	global settings_info
+	clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
 
-	if selected[0]==0:
+	if selectedtab[0]==0:
+		if selecteddropdown=="default_settings_window":
+			if clicked and 1100<=mousex<=1300:
+				pass
+
+		"""if selecteddropdown!="" and clicked and 130+120*dropdowns[selecteddropdown][1]<=mousey<=130+120*dropdowns[selecteddropdown][1]+35*len(dropdowns[selecteddropdown][0]) and 1100<=mousex<=1300:
+			print('hi')
+			settings_info[selecteddropdown] = dropdowns[selecteddropdown][0][int(((mousey-130)//120)//35)]"""
+		
+		if 690<=mousex<=1310:
+			if 120<=mousey<=170:
+				d.draw.rect(window, grey2, (690, 120, 620, 50), 0, 10)
+				if clicked:
+					if selecteddropdown=="":
+						selecteddropdown = "default_settings_window"
+					else:
+						selecteddropdown = ""
+			elif 180<=mousey<=230:
+				d.draw.rect(window, grey2, (690, 180, 620, 50), 0, 10)
+		
 		window.blit(fonts[1].render("Default Settings Tab", True, lightestgrey), (700,130))
-		settings_dropdown(130, settingstabs, settings_info["default_settings_window"])
+		settings_dropdown(130, "default_settings_window")
+		window.blit(fonts[1].render("something else", True, lightestgrey), (700,190))
+		settings_yesno(190, True)
 
-	elif selected[0]==1:
+	elif selectedtab[0]==1:
 		pass
 
-	elif selected[0]==2:
+	elif selectedtab[0]==2:
 		pass
 
-	elif selected[0]==3:
+	elif selectedtab[0]==3:
 		if 690<=mousex<=1310:
 			if 120<=mousey<=170:
 				d.draw.rect(window, grey2, (690, 120, 620, 50), 0, 10)
@@ -671,10 +711,10 @@ def settingsoptions(mousex, mousey):
 		window.blit(fonts[1].render("Show possible squares", True, lightestgrey), (700,130))
 		settings_yesno(130, settings_info["show_possible_squares"])
 		
-	elif selected[0]==4:
+	elif selectedtab[0]==4:
 		pass
 
-	elif selected[0]==5:
+	elif selectedtab[0]==5:
 		pass
 
 def settings_yesno(y, bol):
@@ -683,8 +723,26 @@ def settings_yesno(y, bol):
 	else:
 		window.blit(settings_no, (1250, y+5))
 
-def settings_dropdown(y, list, chosen):
-	pass
+def settings_dropdown(y, parameter):
+	llist = dropdowns[parameter][0]
+	clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
+
+	if True:
+		pass
+
+	if selecteddropdown=="":
+		d.draw.rect(window, darkergrey, (1100, y-2, 200, 35), 0, 5)
+		window.blit(fonts[0].render(settings_info[parameter], True, lightergrey), (1110,y+2))
+		window.blit(dropdown_isclosed, (1275, y+10))
+
+	else:
+		d.draw.rect(window, darkergrey, (1100, y-2, 200, 35*len(llist)), 0, 5)
+		window.blit(fonts[0].render(settings_info[parameter], True, lightergrey), (1110,y+2))
+		window.blit(dropdown_isopen, (1275, y+10))
+		dropdownlist = llist[:]
+		dropdownlist.remove(settings_info[parameter])
+		for i, j in enumerate(dropdownlist, 1):
+			window.blit(fonts[0].render(j, True, lightgrey), (1110,y+2+35*i))
 
 def settings_input(y, current):
 	pass
@@ -853,8 +911,9 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global running
 	global display
 	global buttons
-	global selected
+	global selectedtab
 	global settings_info
+	global selecteddropdown
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
 	while running and display == "settings":
@@ -875,22 +934,23 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 				if 100<=mousey<=400:
 					for i in range(6):
 						if 101+50*i<=mousey<=150+50*i:
-							selected[1] = i
+							selectedtab[1] = i
+							selecteddropdown = ""
 							d.draw.rect(window, darkergrey, (360,100+50*i,280,50), 0, 13)
 							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
-								selected[0] = i
+								selectedtab[0] = i
 
-			window.blit(fonts[2].render(settingstabs[selected[0]], True, lightestergrey), (750,30))
+			window.blit(fonts[2].render(settingstabs[selectedtab[0]], True, lightestergrey), (750,30))
 
 			for i in range(6):
-				if selected[0]==i:
+				if selectedtab[0]==i:
 					img = fonts[0].render(settingstabs[i], True, lightestergrey)
-				elif selected[1]==i:
+				elif selectedtab[1]==i:
 					img = fonts[0].render(settingstabs[i], True, lightestgrey)
 				else:
 					img = fonts[0].render(settingstabs[i], True, lightergrey)
 				window.blit(img, (380,110+50*i))
-			selected[1]=-1
+			selectedtab[1]=-1
 
 			settingsoptions(mousex, mousey)
 
