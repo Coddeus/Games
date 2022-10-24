@@ -5,7 +5,7 @@ from math import floor, sin, atan, sqrt
 import copy
 import time
 
-# TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer (hidden window ?), local app for playing on chess.com or lichess or …
+# TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer (hidden window ?), local app for playing on chess.com or lichess.org or …
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ? Or vector image ?) (permanent ?)
 # TODO timed games + rules with it
@@ -27,6 +27,7 @@ import time
 # TODO Ctrl+click to get keyboard shortcut of any element
 # TODO in boring situations, let user choose to draw mirrored arrows :)
 # TODO let choose settings yes/no : colored when changed / when YES + reset button
+# TODO (offer to) save data in a file to keep it for next launch
 
 
 # def list_to_str(chess_board):
@@ -40,6 +41,30 @@ import time
 # def count_positions(n):
 # 	"""Counts the number of possible board positions after n moves"""
 # 	pass
+
+
+
+# CLASSES
+
+
+# Settings
+
+class dropdownitems:
+
+	def __init__(self, itemsinlist, index) -> None:
+		self.list = itemsinlist
+		self.yindex = index
+		self.minx, self.miny, self.maxx, self.maxy = 1100, 130+60*self.yindex, 1300, 130+60*self.yindex+35*len(self.list)
+	
+	def innitin(self, x, y):
+		if self.minx<=x<=self.maxx and self.miny<=y<=self.maxy:
+			newlist = self.list[:]
+			newlist.remove(settings_info[selecteddropdown])
+			newlist.insert(0, settings_info[selecteddropdown])
+			return True, newlist[(y-(130+60*self.yindex))//35]
+		else:
+			return False, False
+
 
 
 
@@ -123,14 +148,16 @@ clock = d.time.Clock()
 isflipped = False
 selectedtab = [-1, -1]
 selecteddropdown = ""
+prop = False, False
 fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
 settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
+default_settings_tab = dropdownitems(settingstabs, 0)
 dropdowns = {
-	"default_settings_window": [settingstabs, 0],
+	"default_settings_tab": default_settings_tab,
 }
 default_settings_info = {
 	"show_possible_squares": True,
-	"default_settings_window": "General",
+	"default_settings_tab": "General",
 }
 settings_info = default_settings_info
 
@@ -138,16 +165,6 @@ settings_info = default_settings_info
 display = "game"
 running = False
 
-
-
-# CLASSES
-
-
-# Settings
-
-class dropdownitems:
-	def __init__(self, parameter, list) -> None:
-		pass
 
 
 # FUNCTIONS
@@ -669,32 +686,41 @@ def drawmenu():
 def settingsoptions(mousex, mousey):
 	global selecteddropdown
 	global settings_info
+	global prop
 	clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
 
 	if selectedtab[0]==0:
-		if selecteddropdown=="default_settings_window":
-			if clicked and 1100<=mousex<=1300:
-				pass
 
-		"""if selecteddropdown!="" and clicked and 130+120*dropdowns[selecteddropdown][1]<=mousey<=130+120*dropdowns[selecteddropdown][1]+35*len(dropdowns[selecteddropdown][0]) and 1100<=mousex<=1300:
-			print('hi')
-			settings_info[selecteddropdown] = dropdowns[selecteddropdown][0][int(((mousey-130)//120)//35)]"""
+		if clicked:
+			if selecteddropdown!="":
+				prop = dropdowns[selecteddropdown].innitin(mousex, mousey)
+			else:
+				prop = False, False
+		dropdownisselected = False
+
+		print("selecteddropdown", selecteddropdown)
+		print("prop", prop)
+		if selecteddropdown!="" and prop[0]:
+			settings_info[selecteddropdown] = prop[1]
 		
-		if 690<=mousex<=1310:
+		elif 690<=mousex<=1310:
+
 			if 120<=mousey<=170:
 				d.draw.rect(window, grey2, (690, 120, 620, 50), 0, 10)
-				if clicked:
-					if selecteddropdown=="":
-						selecteddropdown = "default_settings_window"
-					else:
-						selecteddropdown = ""
+				if clicked and selecteddropdown != "default_settings_tab":
+					selecteddropdown = "default_settings_tab"
+					dropdownisselected = True
+
 			elif 180<=mousey<=230:
 				d.draw.rect(window, grey2, (690, 180, 620, 50), 0, 10)
 		
-		window.blit(fonts[1].render("Default Settings Tab", True, lightestgrey), (700,130))
-		settings_dropdown(130, "default_settings_window")
+		if clicked and not dropdownisselected:
+			selecteddropdown = ""
+		
 		window.blit(fonts[1].render("something else", True, lightestgrey), (700,190))
 		settings_yesno(190, True)
+		window.blit(fonts[1].render("Default Settings Tab", True, lightestgrey), (700,130))
+		settings_dropdown(130, "default_settings_tab")
 
 	elif selectedtab[0]==1:
 		pass
@@ -724,7 +750,8 @@ def settings_yesno(y, bol):
 		window.blit(settings_no, (1250, y+5))
 
 def settings_dropdown(y, parameter):
-	llist = dropdowns[parameter][0]
+	global settings_info
+	llist = dropdowns[parameter].list
 	clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
 
 	if True:
@@ -916,6 +943,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global selecteddropdown
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
+	selectedtab[0]=settingstabs.index(settings_info["default_settings_tab"])
 	while running and display == "settings":
 		for event in d.event.get():
 
@@ -935,7 +963,6 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 					for i in range(6):
 						if 101+50*i<=mousey<=150+50*i:
 							selectedtab[1] = i
-							selecteddropdown = ""
 							d.draw.rect(window, darkergrey, (360,100+50*i,280,50), 0, 13)
 							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
 								selectedtab[0] = i
