@@ -6,7 +6,8 @@
 
 ### Running first time:
 
-You may need `pip install pygame`
+You may need to install pygame library :  
+`pip install pygame`
 
 ### Running : 
 
