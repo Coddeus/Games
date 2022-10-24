@@ -26,6 +26,7 @@ import time
 # TODO describe when hovered element
 # TODO Ctrl+click to get keyboard shortcut of any element
 # TODO in boring situations, let user choose to draw mirrored arrows :)
+# TODO let choose settings yes/no : colored when changed / when YES + reset button
 
 
 # def list_to_str(chess_board):
@@ -47,9 +48,11 @@ import time
 
 # Colors
 grey = d.Color(29, 38, 46)
+grey2 = d.Color(33, 43, 51)
 lightgrey = d.Color(43, 57, 69)
 lightergrey = d.Color(57, 76, 92)
 lightestgrey = d.Color(85, 114, 138)
+lightestergrey = d.Color(113, 152, 184)
 darkgrey = d.Color(24, 32, 39)
 darkergrey = d.Color(21, 27, 33)
 darkestgrey = d.Color(20, 26, 31)
@@ -60,6 +63,7 @@ darkblue = d.Color(40, 40, 100)
 lightorange = d.Color(120, 80, 40)
 darkorange = d.Color(60, 30, 0)
 red = d.Color(150,0,0)
+green = d.Color(0, 125, 0)
 
 # Resolution
 maxwidth = 15360
@@ -72,17 +76,19 @@ quitwidth = 104/downscale
 d.init()
 window = d.display.set_mode((scaledwidth, scaledheight), d.FULLSCREEN | d.SCALED | d.NOFRAME)
 board = d.surface.Surface((800,800))
-icon = d.image.load("Assets\Graphics\WindowIconGrey.png").convert_alpha()  
-settingsicon = d.image.load("Assets\Graphics\settings.png").convert_alpha() 
+icon = d.image.load("Assets/Graphics/WindowIconGrey.png").convert_alpha()  
+settingsicon = d.image.load("Assets/Graphics/settings.png").convert_alpha() 
 settingsicon = d.transform.scale(settingsicon,(80,80))
-reverseicon = d.image.load("Assets\Graphics\\reverse.png").convert_alpha() 
+reverseicon = d.image.load("Assets/Graphics/reverse.png").convert_alpha() 
 reverseicon = d.transform.scale(reverseicon,(80,80))
-quiticon = d.image.load("Assets\Graphics\quit.png").convert_alpha() 
+quiticon = d.image.load("Assets/Graphics/quit.png").convert_alpha() 
 quiticon = d.transform.scale(quiticon,(quitwidth, quitwidth))
-hideicon = d.image.load("Assets\Graphics\minimize.png").convert_alpha() 
+hideicon = d.image.load("Assets/Graphics/minimize.png").convert_alpha() 
 hideicon = d.transform.scale(hideicon,(quitwidth, quitwidth/5))
 wasted = d.image.load("Assets/Graphics/wasted.png").convert_alpha() 
 wasted = d.transform.scale(wasted,(100,100))
+settings_yes = d.image.load("Assets/Graphics/settings_yes.png").convert_alpha()
+settings_no = d.image.load("Assets/Graphics/settings_no.png").convert_alpha()
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()     # "JohnPablok's improved Cburnett chess set" on opengameart.org
 pxy = Pxy = (23,18)
@@ -114,6 +120,13 @@ start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 clock = d.time.Clock()
 isflipped = False
 selected = [-1, -1]
+fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
+settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
+default_settings_info = {
+	"show_possible_squares": True,
+	"default_settings_window": "General",
+}
+settings_info = default_settings_info
 
 # Launching
 display = "game"
@@ -635,6 +648,48 @@ def drawmenu():
 	pass
 
 
+# Settings
+
+def settingsoptions(mousex, mousey):
+
+	if selected[0]==0:
+		window.blit(fonts[1].render("Default Settings Tab", True, lightestgrey), (700,130))
+		settings_dropdown(130, settingstabs, settings_info["default_settings_window"])
+
+	elif selected[0]==1:
+		pass
+
+	elif selected[0]==2:
+		pass
+
+	elif selected[0]==3:
+		if 690<=mousex<=1310:
+			if 120<=mousey<=170:
+				d.draw.rect(window, grey2, (690, 120, 620, 50), 0, 10)
+				if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+					settings_info["show_possible_squares"] = not settings_info["show_possible_squares"]
+		window.blit(fonts[1].render("Show possible squares", True, lightestgrey), (700,130))
+		settings_yesno(130, settings_info["show_possible_squares"])
+		
+	elif selected[0]==4:
+		pass
+
+	elif selected[0]==5:
+		pass
+
+def settings_yesno(y, bol):
+	if bol==True:
+		window.blit(settings_yes, (1250, y+5))
+	else:
+		window.blit(settings_no, (1250, y+5))
+
+def settings_dropdown(y, list, chosen):
+	pass
+
+def settings_colorpicker(y, currentcolor):
+	pass
+
+
 # Diplays 
 
 def initboard(FEN_string):
@@ -795,6 +850,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global display
 	global buttons
 	global selected
+	global settings_info
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
 	while running and display == "settings":
@@ -808,40 +864,31 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 
 			mousex, mousey = d.mouse.get_pos()
 			draw_frame()
-			d.draw.rect(window, darkgrey, (0,0,304,1080), 0, 0)
-			d.draw.rect(window, lightgrey, (300,50,8,980), 0, 15)
+			d.draw.rect(window, darkgrey, (0,0,654,1080), 0, 0)
+			d.draw.rect(window, lightgrey, (650,50,8,980), 0, 15)
 			
-			if 0<=mousex<=300:
+			if 350<=mousex<=650:
 				if 100<=mousey<=400:
 					for i in range(6):
 						if 101+50*i<=mousey<=150+50*i:
 							selected[1] = i
-							d.draw.rect(window, darkergrey, (10,100+50*i,280,50), 0,13)
+							d.draw.rect(window, darkergrey, (360,100+50*i,280,50), 0, 13)
 							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
 								selected[0] = i
 
-			font = d.font.SysFont('cambria', 20)
-			tabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
+			window.blit(fonts[2].render(settingstabs[selected[0]], True, lightestergrey), (750,30))
+
 			for i in range(6):
-				if selected[1]!=i and selected[0]!=i:
-					img = font.render(tabs[i], True, lightergrey)
+				if selected[0]==i:
+					img = fonts[0].render(settingstabs[i], True, lightestergrey)
+				elif selected[1]==i:
+					img = fonts[0].render(settingstabs[i], True, lightestgrey)
 				else:
-					img = font.render(tabs[i], True, lightestgrey)
-				window.blit(img, (30,110+50*i))
+					img = fonts[0].render(settingstabs[i], True, lightergrey)
+				window.blit(img, (380,110+50*i))
 			selected[1]=-1
 
-			if selected[0]==0:
-				pass
-			if selected[0]==1:
-				pass
-			if selected[0]==2:
-				pass
-			if selected[0]==3:
-				pass
-			if selected[0]==4:
-				pass
-			if selected[0]==5:
-				pass
+			settingsoptions(mousex, mousey)
 
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
@@ -864,7 +911,7 @@ def goodbye():
 	time.sleep(1)
 
 
-# Launch
+# Launching
 
 def launch():
 	global display
