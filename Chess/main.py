@@ -686,7 +686,10 @@ def settings_yesno(y, bol):
 def settings_dropdown(y, list, chosen):
 	pass
 
-def settings_colorpicker(y, currentcolor):
+def settings_input(y, current):
+	pass
+
+def settings_colorpicker(y, current):
 	pass
 
 
@@ -726,6 +729,7 @@ def initboard(FEN_string):
 	drawing = False
 	while running and display == "local":
 		for event in d.event.get():
+
 			if not isflipped:
 				squarey=floor((d.mouse.get_pos()[1]-140)/100)
 				squarex=floor((d.mouse.get_pos()[0]-560)/100)
@@ -818,7 +822,7 @@ def initboard(FEN_string):
 				artsquarey, artsquarex = squarey, squarex
 
 			draw_frame()
-			draw_board(list, possibilities, True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
+			draw_board(list, possibilities if settings_info["show_possible_squares"]==True else [], True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
 		clock.tick(60)
