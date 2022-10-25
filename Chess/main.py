@@ -146,18 +146,19 @@ piece = "A"
 start_position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 clock = d.time.Clock()
 isflipped = False
-selectedtab = [-1, -1]
+selectedtab = [0, -1]
 selecteddropdown = ""
 prop = False, False
 fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
-settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback']
+settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback', 'Latest']
 default_settings_tab = dropdownitems(settingstabs, 0)
 dropdowns = {
 	"default_settings_tab": default_settings_tab,
 }
 default_settings_info = {
 	"show_possible_squares": True,
-	"default_settings_tab": "General",
+	"default_settings_tab": "Latest",
+	"show_shortcuts": True
 }
 settings_info = default_settings_info
 
@@ -698,8 +699,6 @@ def settingsoptions(mousex, mousey):
 				prop = False, False
 		dropdownisselected = False
 
-		print("selecteddropdown", selecteddropdown)
-		print("prop", prop)
 		if selecteddropdown!="" and prop[0]:
 			settings_info[selecteddropdown] = prop[1]
 		
@@ -713,12 +712,14 @@ def settingsoptions(mousex, mousey):
 
 			elif 180<=mousey<=230:
 				d.draw.rect(window, grey2, (690, 180, 620, 50), 0, 10)
+				if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+					settings_info["show_shortcuts"] = not settings_info["show_shortcuts"] # TODO here
 		
 		if clicked and not dropdownisselected:
 			selecteddropdown = ""
 		
-		window.blit(fonts[1].render("something else", True, lightestgrey), (700,190))
-		settings_yesno(190, True)
+		window.blit(fonts[1].render("Show shortcut when hovering", True, lightestgrey), (700,190))
+		settings_yesno(190, settings_info["show_shortcuts"])
 		window.blit(fonts[1].render("Default Settings Tab", True, lightestgrey), (700,130))
 		settings_dropdown(130, "default_settings_tab")
 
@@ -943,7 +944,8 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global selecteddropdown
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
-	selectedtab[0]=settingstabs.index(settings_info["default_settings_tab"])
+	if not settings_info["default_settings_tab"]=='Latest':
+		selectedtab[0]=settingstabs.index(settings_info["default_settings_tab"])
 	while running and display == "settings":
 		for event in d.event.get():
 
