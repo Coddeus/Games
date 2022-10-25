@@ -28,6 +28,7 @@ import time
 # TODO in boring situations, let user choose to draw mirrored arrows :)
 # TODO let choose settings yes/no : colored when changed / when YES + reset button
 # TODO (offer to) save data in a file to keep it for next launch
+# TODO random quote goodbye message
 
 
 # def list_to_str(chess_board):
@@ -149,18 +150,65 @@ isflipped = False
 selectedtab = [0, -1]
 selecteddropdown = ""
 prop = False, False
+anythingisselected = False
 fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
 settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback', 'Latest']
 default_settings_tab = dropdownitems(settingstabs, 0)
 dropdowns = {
 	"default_settings_tab": default_settings_tab,
 }
-default_settings_info = {
+default_settings_info = { # TODO Here ideas of settings to do
+    #General
+	"remember_settings": True,
+	"settings_filepath": "",
+	"show_shortcuts": True,
+	"color_theme": "dark",
+	"share_quote": True,
+	"sharedquote_rate": 600,
+	"default_settings_tab": 'Latest',
+	"validate_before_closing": True,
+	"say_quotebye": True,
+	"say_goodbye": True,
+
+	# Shortcuts
+	"settings": "s",
+	"flip": "f",
+	"settings_tabs": ["1", "2", "3", "4", "5", "6"],
+	"return": "esc",
+	"minimize": "m",
+
+	# Display
+	"fullscreen": True,
+	"preferred_screen": 1,
+	"resolution": [0, 0],
+
+	# Customize
 	"show_possible_squares": True,
-	"default_settings_tab": "Latest",
-	"show_shortcuts": True
+	"possible_squares_indicator": "disk",
+	"possible_squares_color": "grey", # RGB
+	"board_scale": [800, 800],
+	"white_square_color": "a",
+	"black_square_color": "z",
+	"white_square_color_alt": "e",
+	"black_square_color_alt": "r",
+	"white_square_color_ctrl": "t",
+	"black_square_color_ctrl": "y",
+	"white_square_color_shft": "u",
+	"black_square_color_shft": "i",
+	"pieces_scale": 80,
+	"pieces_png": ["default"]*16, # Different pawns ?!?! Why not :D
+	# + Options to play with keyboard, blindfolded
+
+	# ……… (accounts management "link_accounts" "unlink_accounts" …)
+
+	# Contact/Feedback
+	# + Contact info
+	# + Feedback score (/+ input (/+ form))
+
 }
-settings_info = default_settings_info
+usesavedsettings = False
+if not usesavedsettings:
+	settings_info = default_settings_info
 
 # Launching
 display = "game"
@@ -713,13 +761,27 @@ def settingsoptions(mousex, mousey):
 			elif 180<=mousey<=230:
 				d.draw.rect(window, grey2, (690, 180, 620, 50), 0, 10)
 				if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
-					settings_info["show_shortcuts"] = not settings_info["show_shortcuts"] # TODO here
+					settings_info["show_shortcuts"] = not settings_info["show_shortcuts"] # TODO Shortcuts display
+			
+			elif 240<=mousey<=290:
+				d.draw.rect(window, grey2, (690, 240, 620, 50), 0, 10)
+				if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+					settings_info["say_goodbye"] = not settings_info["say_goodbye"]
+			
+			elif 300<=mousey<=350:
+				d.draw.rect(window, grey2, (690, 300, 620, 50), 0, 10)
+				if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+					settings_info["validate_before_closing"] = not settings_info["validate_before_closing"]
 		
 		if clicked and not dropdownisselected:
 			selecteddropdown = ""
 		
 		window.blit(fonts[1].render("Show shortcut when hovering", True, lightestgrey), (700,190))
 		settings_yesno(190, settings_info["show_shortcuts"])
+		window.blit(fonts[1].render("Get a goodbye message", True, lightestgrey), (700,250))
+		settings_yesno(250, settings_info["say_goodbye"])
+		window.blit(fonts[1].render("Confirm exiting", True, lightestgrey), (700,310))
+		settings_yesno(310, settings_info["validate_before_closing"])
 		window.blit(fonts[1].render("Default Settings Tab", True, lightestgrey), (700,130))
 		settings_dropdown(130, "default_settings_tab")
 
@@ -954,6 +1016,10 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE:
 				display = "local"
+			
+			elif event.type == d.KEYDOWN and not anythingisselected and event.key in [d.K_1, d.K_2, d.K_3, d.K_4, d.K_5, d.K_6]:
+
+				selectedtab[0] = event.key-49
 
 			mousex, mousey = d.mouse.get_pos()
 			draw_frame()
@@ -1022,7 +1088,8 @@ def launch():
 		elif display == "sssettings":
 			pass
 		draw_frame()
-	goodbye()
+	if settings_info["say_goodbye"]:
+		goodbye()
 	d.quit()
 
 
