@@ -241,8 +241,15 @@ default_settings_info = [ # Order settings here
 
 
 usesavedsettings = False
-if not usesavedsettings:
-	settings_info = default_settings_info
+
+try:
+	if usesavedsettings:
+		pass # get data
+	else:
+		settings_info = default_settings_info
+except:
+	settings_info = default_settings_info # ?
+	raise "Error while getting data ; default settings restored"
 
 # Launching
 display = "game"
