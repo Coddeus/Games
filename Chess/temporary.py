@@ -27,9 +27,10 @@ def settings_title():
     pass
 
 
-fav_colors = {
+"""fav_colors = {
     "color_theme": [["dark"], [d.Color(w/e)]]
-}
+    "efzhbfez": [["hbv", "hbfzfhzf"], [d.Color(w/e1), d.Color(w/e2)]]
+}"""
 
 
 #-----------------------------------------------------------------
@@ -57,6 +58,7 @@ fav_colors = {
 	"fullscreen": True,
 	"preferred_screen": 1,
 	"resolution": [0, 0],
+	"framerate": 60,
 
 	# Customize
 	"show_possible_squares": True,
@@ -73,6 +75,7 @@ fav_colors = {
 	"black_square_color_shft": "i",
 	"pieces_scale": 80,
 	"pieces_png": ["default"]*16, # Different pawns ?!?! Why not :D
+	"endofgame_animation": None
 	# + Options to play with keyboard, blindfolded
 
 	# ……… (accounts management "link_accounts" "unlink_accounts" …)
@@ -82,45 +85,34 @@ fav_colors = {
 	# + Feedback score (/+ input (/+ form))"""
 
 
-orgsettings = [
+
+
+#  orgsettings[n][m] = [id, name, type, value]
+#
+orgsettings = [ # Order settings here
 	[       # Tab 1
-        "YNremember_settings",
-        "TIsettings_filepath",
-        "YNshow_shortcuts",
-        "CPcolor_theme",
-        "YNshare_quote",
-        "NIsharedquote_rate",
-        "DDdefault_settings_tab",
-        "YNvalidate_before_closing",
-        "YNsay_quotebye",
-        "YNsay_goodbye"
+        ["show_shortcuts", "Show shortcut when hovering", "YN", True],
+        ["default_settings_tab", "Default Settings Tab", "DD", "Latest"],
+        ["validate_before_closing", "Confirm when exiting", "YN", True],
+        ["say_goodbye", "Get a goodbye message", "YN", True]
     ],  
     [       # Tab 2
-        "YNremember_settings",
-        "TIsettings_filepath",
-        "YNshow_shortcuts",
-        "CPcolor_theme",
-        "YNshare_quote",
-        "NIsharedquote_rate",
-        "DDdefault_settings_tab",
-        "YNvalidate_before_closing",
-        "YNsay_quotebye",
-        "YNsay_goodbye"
+
     ],  
     [       # Tab 3
-        "YNremember_settings",
-        "TIsettings_filepath",
-        "YNshow_shortcuts",
-        "CPcolor_theme",
-        "YNshare_quote",
-        "NIsharedquote_rate",
-        "DDdefault_settings_tab",
-        "YNvalidate_before_closing",
-        "YNsay_quotebye",
-        "YNsay_goodbye"
-    ],  
 
-] # Can still add tabs
+    ],
+    [       # Tab 4
+	    "show_possible_squares"
+    ],
+    [       # Tab 5
+    
+    ],
+    [       # Tab 6
+    
+    ]
+
+] 
 
 
 settings_types = {
@@ -131,7 +123,7 @@ settings_types = {
     "NI": settings_numinput(),
     "CP": settings_colorpicker(),
     "TT": settings_title()
-} # Can still add new types
+} # ADD TITLES TO TIDY UP
 
 
 
@@ -169,7 +161,7 @@ def settingsoptions(mousex, mousey):
 			elif 180<=mousey<=230:
 				d.draw.rect(window, grey2, (690, 180, 620, 50), 0, 10)
 				if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
-					settings_info["show_shortcuts"] = not settings_info["show_shortcuts"] # TODO Shortcuts display
+					settings_info["show_shortcuts"] = not settings_info["show_shortcuts"]
 			
 			elif 240<=mousey<=290:
 				d.draw.rect(window, grey2, (690, 240, 620, 50), 0, 10)

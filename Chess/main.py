@@ -76,7 +76,7 @@ class dropdownitems:
 # VARIABLES
 
 
-# Colors                    # Make all colors changeable according to the theme setting
+# Colors                    # Make all colors changeable according to the theme (parameter)
 grey = d.Color(29, 38, 46)
 grey2 = d.Color(33, 43, 51)
 lightgrey = d.Color(43, 57, 69)
@@ -129,7 +129,7 @@ bxy = Bxy = kxy = Kxy = (18,18)
 rxy = Rxy = (20,18)
 qxy = Qxy = (15,18)
 
-# Global
+# Local
 bglist = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 all_pieces = [["P","N","B","R","Q","K"], ["p","n","b","r","q","k"]]
 dragged = False
@@ -157,6 +157,7 @@ prop = False, False
 anythingisselected = False
 fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
 settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback', 'Latest']
+"""
 default_settings_tab = dropdownitems(settingstabs, 0)
 dropdowns = {
 	"default_settings_tab": default_settings_tab,
@@ -185,11 +186,12 @@ default_settings_info = { # TODO Here ideas of settings to do
 	"fullscreen": True,
 	"preferred_screen": 1,
 	"resolution": [0, 0],
+	"framerate": 60,
 
 	# Customize
 	"show_possible_squares": True,
 	"possible_squares_indicator": "disk",
-	"possible_squares_color": "grey", # RGB
+	"possible_squares_color": "grey", # RGB/Hex
 	"board_scale": [800, 800],
 	"white_square_color": "a",
 	"black_square_color": "z",
@@ -201,6 +203,7 @@ default_settings_info = { # TODO Here ideas of settings to do
 	"black_square_color_shft": "i",
 	"pieces_scale": 80,
 	"pieces_png": ["default"]*16, # Different pawns ?!?! Why not :D
+	"endofgame_animation": None
 	# + Options to play with keyboard, blindfolded
 
 	# ……… (accounts management "link_accounts" "unlink_accounts" …)
@@ -210,7 +213,33 @@ default_settings_info = { # TODO Here ideas of settings to do
 	# + Feedback score (/+ input (/+ form))
 	# link to other projects
 
-}
+}"""
+default_settings_info = [ # Order settings here
+	[       # Tab 1
+        ["show_shortcuts", "Show shortcut when hovering", "YN", True],
+        ["default_settings_tab", "Default Settings Tab", "DD", "Latest"],
+        ["validate_before_closing", "Confirm when exiting", "YN", True],
+        ["say_goodbye", "Get a goodbye message", "YN", True]
+    ],  
+    [       # Tab 2
+
+    ],  
+    [       # Tab 3
+
+    ],
+    [       # Tab 4
+	    ["show_possible_squares", "Show possible squares", "YN", True]
+    ],
+    [       # Tab 5
+    
+    ],
+    [       # Tab 6
+    
+    ]
+
+] 
+
+
 usesavedsettings = False
 if not usesavedsettings:
 	settings_info = default_settings_info
@@ -811,14 +840,18 @@ def settingsoptions(mousex, mousey):
 	elif selectedtab[0]==5:
 		pass
 
+
+def settings_title(y, current):
+	pass
+
 def settings_yesno(y, bol):
-	if bol==True:
+	"""if bol==True:
 		window.blit(settings_yes, (1250, y+5))
 	else:
-		window.blit(settings_no, (1250, y+5))
+		window.blit(settings_no, (1250, y+5))"""
 
 def settings_dropdown(y, parameter):
-	global settings_info
+	"""global settings_info
 	llist = dropdowns[parameter].list
 	clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
 
@@ -837,14 +870,29 @@ def settings_dropdown(y, parameter):
 		dropdownlist = llist[:]
 		dropdownlist.remove(settings_info[parameter])
 		for i, j in enumerate(dropdownlist, 1):
-			window.blit(fonts[0].render(j, True, lightgrey), (1110,y+2+35*i))
+			window.blit(fonts[0].render(j, True, lightgrey), (1110,y+2+35*i))"""
 
-def settings_input(y, current):
+def settings_numinput(y, current):
+	pass
+
+def settings_textinput(y, current):
+	pass
+
+def settings_picinput(y, current):
 	pass
 
 def settings_colorpicker(y, current):
 	pass
 
+"""settings_types = {
+    "TT": settings_title(),
+    "YN": settings_yesno(),
+    "DD": settings_dropdown(),
+    "NI": settings_numinput(),
+    "TI": settings_textinput(),
+    "PI": settings_picinput(),
+    "CP": settings_colorpicker()
+}"""
 
 # Diplays 
 
@@ -975,7 +1023,7 @@ def initboard(FEN_string):
 				artsquarey, artsquarex = squarey, squarex
 
 			draw_frame()
-			draw_board(list, possibilities if settings_info["show_possible_squares"]==True else [], True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
+			draw_board(list, possibilities if settings_info[3][0][3]==True else [], True if piece == "k" or piece == "K" else False, startsquarey, startsquarex)
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
 		clock.tick(60)
@@ -1011,8 +1059,8 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global selecteddropdown
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
-	if not settings_info["default_settings_tab"]=='Latest':
-		selectedtab[0]=settingstabs.index(settings_info["default_settings_tab"])
+	if not settings_info[0][1][3]=='Latest':
+		selectedtab[0]=settingstabs.index(settings_info[0][1][3])
 	while running and display == "settings":
 		for event in d.event.get():
 
@@ -1042,17 +1090,20 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 
 			window.blit(fonts[2].render(settingstabs[selectedtab[0]], True, lightestergrey), (750,30))
 
-			for i in range(6):
+			for i, j in enumerate(settingstabs[:-1]):
 				if selectedtab[0]==i:
-					img = fonts[0].render(settingstabs[i], True, lightestergrey)
+					img = fonts[0].render(j, True, lightestergrey)
 				elif selectedtab[1]==i:
-					img = fonts[0].render(settingstabs[i], True, lightestgrey)
+					img = fonts[0].render(j, True, lightestgrey)
 				else:
-					img = fonts[0].render(settingstabs[i], True, lightergrey)
+					img = fonts[0].render(j, True, lightergrey)
 				window.blit(img, (380,110+50*i))
 			selectedtab[1]=-1
 
-			settingsoptions(mousex, mousey)
+			for yindex, data in enumerate(settings_info[selectedtab[0]]):
+				print(yindex,data)
+
+			"""settingsoptions(mousex, mousey)  # loop here instead"""
 
 			d.display.update()
 			buttons = d.mouse.get_pressed(5)
@@ -1093,7 +1144,7 @@ def launch():
 		elif display == "sssettings":
 			pass
 		draw_frame()
-	if settings_info["say_goodbye"]:
+	if settings_info[0][3][3]:
 		goodbye()
 	d.quit()
 
