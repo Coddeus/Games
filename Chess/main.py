@@ -5,7 +5,7 @@ from math import floor, sin, atan, sqrt
 import copy
 import time
 
-# TODO make a start menu with PvP (local or distant), PvC, computer analysis, AI trainer (hidden window ?), local app for playing on chess.com or lichess.org or …
+# TODO make a start menu with PvP (same device (≅ autoflip) or local or distant), PvC, computer analysis, AI trainer (hidden window ?), local app for playing on chess.com or lichess.org or …
 # TODO make a menu bar
 # TODO add different resolutions (1 big and others are smallered img resolutions ? Or vector image ?) (permanent ?)
 # TODO timed games + rules with it
@@ -29,6 +29,7 @@ import time
 # TODO let choose settings yes/no : colored when changed / when YES + reset button
 # TODO (offer to) save data in a file to keep it for next launch
 # TODO random quote goodbye message
+# TODO SQL settings database ?
 
 
 # def list_to_str(chess_board):
@@ -65,6 +66,9 @@ class dropdownitems:
 			return True, newlist[(y-(130+60*self.yindex))//35]
 		else:
 			return False, False
+	
+	def display(y):
+		pass
 
 
 
@@ -72,7 +76,7 @@ class dropdownitems:
 # VARIABLES
 
 
-# Colors
+# Colors                    # Make all colors changeable according to the theme setting
 grey = d.Color(29, 38, 46)
 grey2 = d.Color(33, 43, 51)
 lightgrey = d.Color(43, 57, 69)
@@ -160,7 +164,7 @@ dropdowns = {
 default_settings_info = { # TODO Here ideas of settings to do
     #General
 	"remember_settings": True,
-	"settings_filepath": "",
+	"settings_filepath": "", # + popup ?
 	"show_shortcuts": True,
 	"color_theme": "dark",
 	"share_quote": True,
@@ -204,6 +208,7 @@ default_settings_info = { # TODO Here ideas of settings to do
 	# Contact/Feedback
 	# + Contact info
 	# + Feedback score (/+ input (/+ form))
+	# link to other projects
 
 }
 usesavedsettings = False
@@ -489,7 +494,7 @@ def possible_squares(list,piece,squarey,squarex):
 			if eval(conditions[i]):
 				if list[verify_squares[i][0]][verify_squares[i][1]] not in all_pieces[list[8][0]%2]:
 					possible_squares.append([verify_squares[i][0], verify_squares[i][1]])
-	
+
 	elif piece == "B" or piece == "b":
 		squareyop = ["testsquarey+1", "testsquarey+1", "testsquarey-1", "testsquarey-1"]
 		squarexop = ["testsquarex+1", "testsquarex-1", "testsquarex+1", "testsquarex-1"]
