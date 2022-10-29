@@ -156,12 +156,13 @@ selecteddropdown = ""
 prop = False, False
 anythingisselected = False
 fonts = [d.font.SysFont('cambria', 20), d.font.SysFont('cambria', 25), d.font.SysFont('cambria', 30)]
-settingstabs = ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback', 'Latest']
+dropdowns = { 
+	"default_settings_tab": ['General', 'Shortcuts', 'Display', 'Customise', '………', 'Contact/Feedback', 'Latest'],
+}
+
 """
 default_settings_tab = dropdownitems(settingstabs, 0)
-dropdowns = {
-	"default_settings_tab": default_settings_tab,
-}
+
 default_settings_info = { # TODO Here ideas of settings to do
     #General
 	"remember_settings": True,
@@ -214,10 +215,11 @@ default_settings_info = { # TODO Here ideas of settings to do
 	# link to other projects
 
 }"""
+
 default_settings_info = [ # Order settings here
 	[       # Tab 1
         ["show_shortcuts", "Show shortcut when hovering", "YN", True],
-        ["default_settings_tab", "Default Settings Tab", "DD", "Latest"],
+        ["default_settings_tab", "Default Settings Tab", "DD", 'Latest'],
         ["validate_before_closing", "Confirm when exiting", "YN", True],
         ["say_goodbye", "Get a goodbye message", "YN", True]
     ],  
@@ -239,7 +241,8 @@ default_settings_info = [ # Order settings here
 
 ] 
 
-
+currentsettingid = ""
+currentsettingy = 120
 usesavedsettings = False
 
 try:
@@ -848,17 +851,15 @@ def settingsoptions(mousex, mousey):
 		pass
 
 
-def settings_title(y, current):
-	pass
-
-def settings_yesno(y, bol):
-	"""if bol==True:
-		window.blit(settings_yes, (1250, y+5))
+def settings_yesno(yindex):
+	val = settings_info[selectedtab[0]][yindex][3]
+	if val==True:
+		window.blit(settings_yes, (1250, 120+60*yindex+15))
 	else:
-		window.blit(settings_no, (1250, y+5))"""
+		window.blit(settings_no, (1250, 120+60*yindex+15))
 
-def settings_dropdown(y, parameter):
-	"""global settings_info
+def settings_dropdown(yindex):
+	global settings_info
 	llist = dropdowns[parameter].list
 	clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
 
@@ -877,29 +878,28 @@ def settings_dropdown(y, parameter):
 		dropdownlist = llist[:]
 		dropdownlist.remove(settings_info[parameter])
 		for i, j in enumerate(dropdownlist, 1):
-			window.blit(fonts[0].render(j, True, lightgrey), (1110,y+2+35*i))"""
+			window.blit(fonts[0].render(j, True, lightgrey), (1110,y+2+35*i))
 
-def settings_numinput(y, current):
+def settings_numinput(yindex):
 	pass
 
-def settings_textinput(y, current):
+def settings_textinput(yindex):
 	pass
 
-def settings_picinput(y, current):
+def settings_picinput(yindex):
 	pass
 
-def settings_colorpicker(y, current):
+def settings_colorpicker(yindex):
 	pass
 
-"""settings_types = {
-    "TT": settings_title(),
-    "YN": settings_yesno(),
-    "DD": settings_dropdown(),
-    "NI": settings_numinput(),
-    "TI": settings_textinput(),
-    "PI": settings_picinput(),
-    "CP": settings_colorpicker()
-}"""
+settings_types = {
+    "YN": settings_yesno(currentsettingid, currentsettingy),
+    "DD": settings_dropdown(currentsettingid, currentsettingy),
+    "NI": settings_numinput(currentsettingid, currentsettingy),
+    "TI": settings_textinput(currentsettingid, currentsettingy),
+    "PI": settings_picinput(currentsettingid, currentsettingy),
+    "CP": settings_colorpicker(currentsettingid, currentsettingy)
+}
 
 # Diplays 
 
@@ -1064,12 +1064,16 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global selectedtab
 	global settings_info
 	global selecteddropdown
+	global currentsettingid
+	global currentsettingy
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
 	if not settings_info[0][1][3]=='Latest':
-		selectedtab[0]=settingstabs.index(settings_info[0][1][3])
+		selectedtab[0]=dropdowns["default_settings_tab"].index(settings_info[0][1][3])
 	while running and display == "settings":
 		for event in d.event.get():
+
+			clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
 
 			if event.type == d.QUIT:
 				running = False
@@ -1086,6 +1090,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 			d.draw.rect(window, darkgrey, (0,0,654,1080), 0, 0)
 			d.draw.rect(window, lightgrey, (650,50,8,980), 0, 15)
 			
+			# Tabs
 			if 350<=mousex<=650:
 				if 100<=mousey<=400:
 					for i in range(6):
@@ -1095,9 +1100,9 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 							if d.mouse.get_pressed(5)[0]==True and buttons[0]==False:
 								selectedtab[0] = i
 
-			window.blit(fonts[2].render(settingstabs[selectedtab[0]], True, lightestergrey), (750,30))
+			window.blit(fonts[2].render(dropdowns["default_settings_tab"][selectedtab[0]], True, lightestergrey), (750,30))
 
-			for i, j in enumerate(settingstabs[:-1]):
+			for i, j in enumerate(dropdowns["default_settings_tab"][:-1]):
 				if selectedtab[0]==i:
 					img = fonts[0].render(j, True, lightestergrey)
 				elif selectedtab[1]==i:
@@ -1107,8 +1112,55 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 				window.blit(img, (380,110+50*i))
 			selectedtab[1]=-1
 
+
+			# In-Tab data
 			for yindex, data in enumerate(settings_info[selectedtab[0]]):
-				print(yindex,data)
+
+				# Shared format
+				if data[2] != "TT":
+
+					# On dropdown
+					if selecteddropdown==data[0] and 1100<=mousex<=1300 and 128+60*yindex<=mousey<=128+60*yindex+35*len(dropdowns[selecteddropdown]):
+						settings_info[selectedtab[0]][yindex][3] = dropdowns[data[0]][(mousey-120-60*yindex)//35]
+					
+					# On clickable option
+					elif 690<=mousex<=1310 and 120+60*yindex<=mousey<=170+60*yindex and (selecteddropdown==[] or not 1100<=mousex<=1300 or not 128+60*yindex<=mousey<=128+60*yindex+35*(len(selecteddropdown)-1)):
+						d.draw.rect(window, grey2, (690, 120+60*yindex, 620, 50), 0, 10)
+						if clicked:
+
+							# State/Value changing
+							match data[2]:
+								case "YN":
+									settings_info[selectedtab[0]][yindex][3] = not data[3]
+								case "DD":
+									if selecteddropdown==data[0]:
+										selecteddropdown=""
+									else:
+										selecteddropdown=data[0]
+
+					window.blit(fonts[1].render(data[1], True, lightestgrey), (700,130+60*yindex))
+				else:
+					window.blit(fonts[1].render(data[2], True, lightestgrey), (750,130+60*yindex))
+
+				# Display disjunction
+				match data[2]:
+					case "YN": 
+						settings_yesno(yindex)
+					case "DD": 
+						settings_dropdown(yindex)
+					case "NI": 
+						settings_numinput(yindex)
+					case "TI": 
+						settings_textinput(yindex)
+					case "PI": 
+						settings_picinput(yindex)
+					case "CP": 
+						settings_colorpicker(yindex)
+					case "TT": 
+						pass
+					case _: 
+						print("Wrong setting type")
+			
 
 			"""settingsoptions(mousex, mousey)  # loop here instead"""
 

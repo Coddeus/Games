@@ -1,3 +1,9 @@
+list = [True]
+data = list[0]
+data=False
+print(id(list), id(data))
+
+
 # Settings 
 
 
