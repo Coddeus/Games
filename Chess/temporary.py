@@ -1,6 +1,5 @@
 list = [True]
-data = list[0]
-data=False
+data = list[:]
 print(id(list), id(data))
 
 
