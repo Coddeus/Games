@@ -933,6 +933,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	d.display.set_caption('Chess - Settings')
 	if not settings_info[0][1][3]=='Latest':
 		selectedtab[0]=dropdowns["default_settings_tab"].index(settings_info[0][1][3])
+	activeitem=[]
 	while running and display == "settings":
 		for event in d.event.get():
 
@@ -1008,6 +1009,8 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 									if selecteddropdown!=data[0]:
 										selecteddropdown=data[0]
 										currentdropdowntop=125+60*yindex
+										activeitem = [data, yindex]
+										isitemactive = True
 
 					window.blit(fonts[1].render(data[1], True, lightestgrey), (700,130+60*yindex))
 				else:
