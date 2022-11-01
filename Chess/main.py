@@ -101,6 +101,10 @@ settings_yes = d.image.load("Assets/Graphics/settings_yes.png").convert_alpha()
 settings_no = d.image.load("Assets/Graphics/settings_no.png").convert_alpha()
 dropdown_isclosed = d.image.load("Assets/Graphics/dropdown_isclosed.png").convert_alpha()
 dropdown_isopen = d.image.load("Assets/Graphics/dropdown_isopen.png").convert_alpha()
+confirm_closing = d.image.load("Assets/Graphics/confirm_closing.png").convert_alpha()
+confirm_closing_cancel = d.image.load("Assets/Graphics/confirm_closing_cancel.png").convert_alpha()
+confirm_closing_close = d.image.load("Assets/Graphics/confirm_closing_close.png").convert_alpha()
+
 for x in ["bp", "wP", "bn", "wN", "bb", "wB", "br", "wR", "bq", "wQ", "bk", "wK"]:
 	globals()[x[1]] = d.image.load(path.join('Assets', 'Pieces', x+'.png')).convert_alpha()     # { "JohnPablok's improved Cburnett chess set" on opengameart.org
 pxy = Pxy = (23,18)
@@ -191,22 +195,86 @@ running = False
 def draw_frame():
 	global running
 	global window
+	global buttons
+	clicked = buttons[0]==False and d.mouse.get_pressed(5)[0]==True
+
+	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65 and clicked and settings_info[0][2][3]==True:
+		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
+		window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+		drawconfirmbox(window.copy())
+		clicked = False
 	window.fill(grey)
+
 	if (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65):
 		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
-		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+		if clicked:
 			running = False
 	else:
 		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
-	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-130 and d.mouse.get_pos()[0]<=scaledwidth-65:
+
+	if d.mouse.get_pos()[1]<=33 and scaledwidth-65>=d.mouse.get_pos()[0]>=scaledwidth-130:
 		d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
-		if buttons[0]==False and d.mouse.get_pressed(5)[0]==True:
+		if clicked:
 			d.display.iconify()
 	else:
 		d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
+
 	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
 	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
 
+def drawconfirmbox(bgimg):
+	global buttons
+	global running
+	clicked = False
+	buttons = d.mouse.get_pressed(5)
+	validatingclosing = True
+	
+	gfxd.box(bgimg, (0, 0, scaledwidth, scaledheight), (0, 0, 0, 100))
+	window.blit(bgimg, (0, 0))
+	d.display.update()
+
+	while running and validatingclosing:
+		for event in d.event.get():
+
+			mousex, mousey = d.mouse.get_pos()
+			clicked = buttons[0]==False and d.mouse.get_pressed(5)[0]==True
+			window.blit(bgimg, (0, 0))
+
+			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_KP_ENTER or event.key == d.K_RETURN)):
+				running = False
+
+			elif event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE):
+				validatingclosing = False
+
+			elif (mousey<=33 and mousex>=scaledwidth-65):
+				d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
+				if clicked:
+					running = False
+
+			elif mousey<=33 and scaledwidth-65>=mousex>=scaledwidth-130:
+				d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
+				if clicked:
+					d.display.iconify()
+
+			window.blit(hideicon, (scaledwidth-quitwidth*8,15))
+			window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+			if 450<=mousey<=500:
+				if 833<=mousex<=945:
+					window.blit(confirm_closing_cancel, (803, 356))
+					if clicked:
+						validatingclosing = False
+				elif 975<=mousex<=1088:
+					window.blit(confirm_closing_close, (803, 356))
+					if clicked:
+						running = False
+				else:
+					window.blit(confirm_closing, (803, 356))
+			else:
+				window.blit(confirm_closing, (803, 356))
+
+			d.display.update()
+			buttons = d.mouse.get_pressed(5)
+		clock.tick(60)
 
 # Board
 
@@ -810,21 +878,22 @@ def initboard(FEN_string):
 			else:
 				print("Flipping Error")
 				d.quit()
+			clicked = buttons[0]==False and d.mouse.get_pressed(5)[0]==True
 
-			if event.type == d.QUIT: # You can press Esc to quit app
+			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
 				running = False
 			
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE: # Save game  before initting
 				display = "menu" # TODO here
 			
-			elif (buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=239) or event.type == d.KEYDOWN and event.key == d.K_s:
+			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=239) or event.type == d.KEYDOWN and event.key == d.K_s:
 				display = "settings"
 
-			elif (buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=240 and d.mouse.get_pos()[1]<=339) or event.type == d.KEYDOWN and event.key == d.K_f:
+			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=240 and d.mouse.get_pos()[1]<=339) or event.type == d.KEYDOWN and event.key == d.K_f:
 				if d.mouse.get_pos()[1]>240:
 					isflipped=True if isflipped==False else False
 
-			elif buttons[0]==False and d.mouse.get_pressed(5)[0]==True and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
+			elif clicked and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
 				globals()["bglist"] = [[0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0]]
 				if possibilitieson and [squarey, squarex] in possibilities:
@@ -909,9 +978,11 @@ def initmenu(): # opens when escape on chess game
 	while running and display == "menu":
 
 		for event in d.event.get():
-			if event.type == d.QUIT or (event.type == d.KEYDOWN and event.key == d.K_ESCAPE):
+			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
 				running = False
 
+			elif event.type == d.KEYDOWN and event.key == d.K_s:
+				display = "settings"
 			 # if click on any interactive image -> init___
 
 			draw_frame()
@@ -937,9 +1008,9 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	while running and display == "settings":
 		for event in d.event.get():
 
-			clicked = True if (buttons[0]==False and d.mouse.get_pressed(5)[0]==True) else False
+			clicked =buttons[0]==False and d.mouse.get_pressed(5)[0]==True
 
-			if event.type == d.QUIT:
+			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
 				running = False
 
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE:
