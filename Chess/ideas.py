@@ -3,9 +3,8 @@ default_settings_info = { # TODO Here ideas of settings to do
 	"remember_settings": True,
 	"settings_filepath": "", # + popup ?
 	"show_shortcuts": True,
-	"color_theme": "dark",
-	"share_quote": True,
-	"sharedquote_rate": 600,
+	"share_quote": True, # AI ?
+	"sharedquote_rate": 600, # Changes every 10 minutes
 	"default_settings_tab": 'Latest',
 	"validate_before_closing": True,
 	"say_quotebye": True,
@@ -23,6 +22,8 @@ default_settings_info = { # TODO Here ideas of settings to do
 	"preferred_screen": 1,
 	"resolution": [0, 0],
 	"framerate": 60,
+	"color_theme": "dark",
+	"brightness": 255,
 
 	# Customize
 	"show_possible_squares": True,

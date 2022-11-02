@@ -231,6 +231,7 @@ def drawconfirmbox(bgimg):
 	
 	gfxd.box(bgimg, (0, 0, scaledwidth, scaledheight), (0, 0, 0, 100))
 	window.blit(bgimg, (0, 0))
+	window.blit(confirm_closing, (803, 356))
 	d.display.update()
 
 	while running and validatingclosing:
@@ -255,6 +256,9 @@ def drawconfirmbox(bgimg):
 				d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
 				if clicked:
 					d.display.iconify()
+			
+			elif clicked and not (803<=mousex<=1118 and 356<=mousey<=540):
+				validatingclosing = False
 
 			window.blit(hideicon, (scaledwidth-quitwidth*8,15))
 			window.blit(quiticon, (scaledwidth-quitwidth*3,10))
@@ -880,18 +884,18 @@ def initboard(FEN_string):
 				d.quit()
 			clicked = buttons[0]==False and d.mouse.get_pressed(5)[0]==True
 
-			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
+			if event.type == d.QUIT:
 				running = False
 			
-			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE: # Save game  before initting
+			elif event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE): # Save game  before initting
 				display = "menu" # TODO here
 			
-			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=239) or event.type == d.KEYDOWN and event.key == d.K_s:
+			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=239) or (event.type == d.KEYDOWN and event.key == d.K_s):
 				display = "settings"
 
-			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=240 and d.mouse.get_pos()[1]<=339) or event.type == d.KEYDOWN and event.key == d.K_f:
+			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=240 and d.mouse.get_pos()[1]<=339) or (event.type == d.KEYDOWN and event.key == d.K_f):
 				if d.mouse.get_pos()[1]>240:
-					isflipped=True if isflipped==False else False
+					isflipped= not isflipped
 
 			elif clicked and d.mouse.get_pos()[0]>=560 and d.mouse.get_pos()[0]<=1360 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=940:
 				arrows_list = []
@@ -1010,7 +1014,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 
 			clicked =buttons[0]==False and d.mouse.get_pressed(5)[0]==True
 
-			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
+			if event.type == d.QUIT or (event.type == d.KEYDOWN and event.key == d.K_BACKSPACE):
 				running = False
 
 			elif event.type == d.KEYDOWN and event.key == d.K_ESCAPE:
