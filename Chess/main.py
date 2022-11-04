@@ -151,7 +151,7 @@ default_settings_info = [ # Order settings here
         ["show_shortcuts", "Show shortcut when hovering", "YN", True],
         ["default_settings_tab", "Default Settings Tab", "DD", 'Latest'],
         ["validate_before_closing", "Confirm when exiting", "YN", True],
-        ["say_goodbye", "Get a goodbye message", "YN", True]
+        ["say_goodbye", "Get a goodbye message", "YN", False]
     ],  
     [       # Tab 2
 
@@ -196,42 +196,59 @@ def draw_frame():
 	global running
 	global window
 	global buttons
+	global display
 	clicked = buttons[0]==False and d.mouse.get_pressed(5)[0]==True
-
-	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65 and clicked and settings_info[0][2][3]==True:
-		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
-		window.blit(quiticon, (scaledwidth-quitwidth*3,10))
-		drawconfirmbox(window.copy())
-		clicked = False
-	window.fill(grey)
-
-	if (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65):
-		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
-		if clicked:
+	if (event.type == d.KEYDOWN and event.key == d.K_ESCAPE and d.key.get_mods() in [4097, 4098] ) or (d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65 and clicked) or (displaying == "menu" and event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
+		if settings_info[0][2][3]==True:
+			display = displaying
+			d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
+			d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
+			window.blit(hideicon, (scaledwidth-quitwidth*8,15))
+			window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+			windowcopy = window.copy()
+			
+			drawconfirmbox(windowcopy)
+			clicked = False
+		else:
 			running = False
+	window.fill(grey)
+	d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
+	d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
+	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65:
+		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
+		if settings_info[0][0][3]==True:
+			pass
 	else:
-		d.draw.rect(window, grey, (scaledwidth-65, 0, 65, 33))
-
-	if d.mouse.get_pos()[1]<=33 and scaledwidth-65>=d.mouse.get_pos()[0]>=scaledwidth-130:
-		d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
-		if clicked:
-			d.display.iconify()
-	else:
-		d.draw.rect(window, grey, (scaledwidth-130, 0, 65, 33))
+		if d.mouse.get_pos()[1]<=33 and scaledwidth-65>=d.mouse.get_pos()[0]>=scaledwidth-130:
+			d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
+			if clicked:
+				d.display.iconify()
 
 	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
 	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+	
+	
 
 def drawconfirmbox(bgimg):
 	global buttons
 	global running
-	clicked = False
+	global event
+
 	buttons = d.mouse.get_pressed(5)
 	validatingclosing = True
-	
 	gfxd.box(bgimg, (0, 0, scaledwidth, scaledheight), (0, 0, 0, 100))
+
 	window.blit(bgimg, (0, 0))
 	window.blit(confirm_closing, (803, 356))
+
+	if d.mouse.get_pos()[1]<=33 and d.mouse.get_pos()[0]>=scaledwidth-65:
+		d.draw.rect(window, red, (scaledwidth-65, 0, 65, 33))
+	elif d.mouse.get_pos()[1]<=33 and scaledwidth-65>=d.mouse.get_pos()[0]>=scaledwidth-130:
+		d.draw.rect(window, lightgrey, (scaledwidth-130, 0, 65, 33))
+
+	window.blit(quiticon, (scaledwidth-quitwidth*3,10))
+	window.blit(hideicon, (scaledwidth-quitwidth*8,15))
+
 	d.display.update()
 
 	while running and validatingclosing:
@@ -855,6 +872,7 @@ def initboard(FEN_string):
 	global startsquarex
 	global startsquarey
 	global isflipped
+	global event
 	if list==[]:
 		if "/" in FEN_string:
 			list = str_to_list(FEN_string)
@@ -863,8 +881,7 @@ def initboard(FEN_string):
 		window = d.display.set_mode((scaledwidth, scaledheight), d.FULLSCREEN | d.SCALED | d.NOFRAME)
 	d.display.set_icon(icon)
 	d.display.set_caption('Chess')
-	draw_board(list)
-	d.display.update()
+	d.event.post(d.event.Event(d.MOUSEMOTION))
 	buttons = d.mouse.get_pressed(5)
 	possibilities = []
 	possibilitieson = False
@@ -887,7 +904,7 @@ def initboard(FEN_string):
 			if event.type == d.QUIT:
 				running = False
 			
-			elif event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE): # Save game  before initting
+			elif event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE): # Save game before initting
 				display = "menu" # TODO here
 			
 			elif (clicked and d.mouse.get_pos()[0]>1360 and d.mouse.get_pos()[0]<=1460 and d.mouse.get_pos()[1]>=140 and d.mouse.get_pos()[1]<=239) or (event.type == d.KEYDOWN and event.key == d.K_s):
@@ -976,13 +993,15 @@ def initmenu(): # opens when escape on chess game
 	global running
 	global display
 	global buttons
+	global event
 	d.display.set_icon(icon) # TODO Change when HOME svg is done
 	d.display.set_caption('Chess - Menu')
-	window.fill(grey)
+	d.event.post(d.event.Event(d.MOUSEMOTION))
+	buttons = d.mouse.get_pressed(5)
 	while running and display == "menu":
 
 		for event in d.event.get():
-			if event.type == d.QUIT or (event.type == d.KEYDOWN and (event.key == d.K_ESCAPE or event.key == d.K_BACKSPACE)):
+			if event.type == d.QUIT:
 				running = False
 
 			elif event.type == d.KEYDOWN and event.key == d.K_s:
@@ -1004,6 +1023,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	global selecteddropdown
 	global chosendropdownoption
 	global currentdropdowntop
+	global event
 	d.display.set_icon(settingsicon)
 	d.display.set_caption('Chess - Settings')
 	if not settings_info[0][1][3]=='Latest':
@@ -1012,7 +1032,7 @@ def initsettings(): # Miscellaneous : when op. settings, go to General/latest ta
 	while running and display == "settings":
 		for event in d.event.get():
 
-			clicked =buttons[0]==False and d.mouse.get_pressed(5)[0]==True
+			clicked = buttons[0]==False and d.mouse.get_pressed(5)[0]==True
 
 			if event.type == d.QUIT or (event.type == d.KEYDOWN and event.key == d.K_BACKSPACE):
 				running = False
@@ -1136,20 +1156,23 @@ def goodbye():
 
 def launch():
 	global display
+	global displaying
 	global running
 	running = True
 	display = "local"
 	chess_position = start_position
 	while running:
 		if display == "local":
+			displaying = "local"
 			initboard(chess_position)
 		elif display == "menu":
+			displaying = "menu"
 			initmenu()
 		elif display == "settings":
+			displaying = "settings"
 			initsettings()
 		elif display == "sssettings":
-			pass
-		draw_frame()
+			displaying = "sssettings"
 	if settings_info[0][3][3]:
 		goodbye()
 	d.quit()
